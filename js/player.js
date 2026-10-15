@@ -3,6 +3,8 @@
 
   var player = null;
   var ready = false;
+  var creating = false;
+  var loadedVideoId = '';
   var apiLoading = false;
   var apiQueue = [];
   var pendingVideo = null;
@@ -59,6 +61,7 @@
     box.id = 'yt-player-frame';
     host.innerHTML = '';
     host.appendChild(box);
+    loadedVideoId = video.id;
 
     var vars = {
       rel: 0,
@@ -81,7 +84,13 @@
         onReady: function () {
           ready = true;
           hidePlaceholder();
-          try { player.playVideo(); } catch (e) { /* diabaikan */ }
+          var target = pendingVideo;
+          if (target && target.id && target.id !== loadedVideoId) {
+            loadedVideoId = target.id;
+            try { player.loadVideoById(target.id); } catch (e) { /* diabaikan */ }
+          } else {
+            try { player.playVideo(); } catch (e) { /* diabaikan */ }
+          }
           startPolling();
         },
         onStateChange: function (event) {
@@ -96,18 +105,15 @@
             stateHandlers.forEach(function (fn) { fn('buffering'); });
           }
         },
-        onError: function () {
-          if (window.App && App.toast) {
-            App.toast('Video ini tidak dapat diputar di pemutar tersemat.');
-          }
-          stateHandlers.forEach(function (fn) { fn('error'); });
+        onError: function (event) {
+          stateHandlers.forEach(function (fn) { fn('error', event && event.data); });
         }
       }
     });
   }
 
   function startPolling() {
-    if (pollTimer) { return; }
+    if (pollTimer || !timeHandlers.length) { return; }
     pollTimer = setInterval(function () {
       if (!player || !ready) { return; }
       var t = 0;
@@ -119,13 +125,26 @@
   function load(video) {
     if (!video || !video.id) { return; }
     hidePlaceholder();
-    if (player && ready) {
-      try { player.loadVideoById(video.id); } catch (e) { createPlayer(video); }
+    pendingVideo = video;
+
+    if (player) {
+      if (!ready) { return; }
+      if (video.id === loadedVideoId) {
+        try { player.playVideo(); } catch (e) { /* diabaikan */ }
+        startPolling();
+        return;
+      }
+      loadedVideoId = video.id;
+      try { player.loadVideoById(video.id); } catch (e) { /* diabaikan */ }
       startPolling();
       return;
     }
-    pendingVideo = video;
+
+    if (creating) { return; }
+    creating = true;
     ensureApi(function () {
+      creating = false;
+      if (player) { return; }
       createPlayer(pendingVideo || video);
     });
   }
@@ -177,7 +196,10 @@
     toggle: toggle,
     isPlaying: isPlaying,
     toggleFullscreen: toggleFullscreen,
-    onTime: function (fn) { timeHandlers.push(fn); },
+    onTime: function (fn) {
+      timeHandlers.push(fn);
+      if (ready) { startPolling(); }
+    },
     onState: function (fn) { stateHandlers.push(fn); },
     init: function () {
       var toggleBtn = document.getElementById('btn-toggle-play');

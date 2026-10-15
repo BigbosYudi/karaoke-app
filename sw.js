@@ -1,4 +1,4 @@
-var CACHE_NAME = 'karaoke-tv-v2';
+var CACHE_NAME = 'karaoke-tv-v4';
 var ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,6 @@ var ASSETS = [
   './js/queue.js',
   './js/search.js',
   './js/player.js',
-  './js/lyrics.js',
   './js/mic.js',
   './js/guide.js',
   './js/app.js',
@@ -52,18 +51,18 @@ self.addEventListener('fetch', function (event) {
   // Konfigurasi lokal (API key) harus selalu diambil dari jaringan agar perubahan langsung berlaku.
   if (url.pathname.indexOf('config.local.js') !== -1) { return; }
 
+  // Utamakan jaringan agar pembaruan aplikasi langsung terpakai; cache hanya untuk keadaan offline.
   event.respondWith(
-    caches.match(request).then(function (cached) {
-      var network = fetch(request).then(function (response) {
-        if (response && response.ok) {
-          var copy = response.clone();
-          caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });
-        }
-        return response;
-      }).catch(function () {
+    fetch(request).then(function (response) {
+      if (response && response.ok) {
+        var copy = response.clone();
+        caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });
+      }
+      return response;
+    }).catch(function () {
+      return caches.match(request).then(function (cached) {
         return cached || caches.match('./index.html');
       });
-      return cached || network;
     })
   );
 });

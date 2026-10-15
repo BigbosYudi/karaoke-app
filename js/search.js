@@ -2,7 +2,7 @@
   'use strict';
 
   var playingHandlers = [];
-  var busy = false;
+  var requestSeq = 0;
   var lastQuery = '';
 
   function setStatus(text, isError) {
@@ -169,8 +169,7 @@
         setStatus('Masukkan kata kunci terlebih dahulu.', true);
         return Promise.resolve([]);
       }
-      if (busy) { return Promise.resolve([]); }
-      busy = true;
+      var token = ++requestSeq;
       lastQuery = q;
       setStatus('Mencari "' + q + '"...');
       renderResults([]);
@@ -179,14 +178,17 @@
       var task = usedApi
         ? viaDataApi(q).catch(function (err) {
             var quota = err.reason === 'quotaExceeded' || err.reason === 'dailyLimitExceeded';
-            setStatus(quota
-              ? 'Kuota API harian habis. Beralih ke server cadangan...'
-              : 'API YouTube gagal (' + err.message + '). Beralih ke server cadangan...', true);
+            if (token === requestSeq) {
+              setStatus(quota
+                ? 'Kuota API harian habis. Beralih ke server cadangan...'
+                : 'API YouTube gagal (' + err.message + '). Beralih ke server cadangan...', true);
+            }
             return viaInvidious(q);
           })
         : viaInvidious(q);
 
       return task.then(function (results) {
+        if (token !== requestSeq) { return results; }
         cache = {};
         results.forEach(function (v) { cache[v.id] = v; });
         renderResults(results);
@@ -196,12 +198,10 @@
           : 'Tidak ada hasil untuk "' + q + '".');
         return results;
       }).catch(function (err) {
+        if (token !== requestSeq) { return []; }
         renderResults([]);
         setStatus('Pencarian gagal: ' + err.message + '. Periksa koneksi internet TV.', true);
         return [];
-      }).then(function (results) {
-        busy = false;
-        return results;
       });
     },
     onRequestPlay: function (fn) { playingHandlers.push(fn); },

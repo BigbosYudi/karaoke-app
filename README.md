@@ -1,6 +1,6 @@
 # Karaoke TV
 
-Aplikasi karaoke untuk **TV Android** (juga jalan di HP/laptop): cari lagu dari YouTube, susun antrean, putar dengan pemutar resmi YouTube, dan tampilkan lirik yang mengikuti lagu secara otomatis.
+Aplikasi karaoke untuk **TV Android** (juga jalan di HP/laptop): cari lagu dari YouTube, susun antrean, lalu putar dengan pemutar resmi YouTube. Lirik sudah menyatu di dalam video karaoke, jadi aplikasi fokus pada pemutaran dan pengelolaan antrean.
 
 Gratis, tanpa server, tanpa iklan milik aplikasi.
 
@@ -111,7 +111,6 @@ js/config.local.js         Hasil scripts/apply-env.ps1 (tidak di-commit)
 js/queue.js                Antrean lagu (localStorage)
 js/search.js               Pencarian YouTube Data API + fallback Invidious
 js/player.js               Pemutar YouTube IFrame + kontrol + layar penuh
-js/lyrics.js               Lirik LRCLIB + parser LRC + highlight sinkron
 js/mic.js                  Mikrofon + echo (Web Audio API)
 js/guide.js               Deteksi dukungan & tautan ke Setelan
 js/app.js                  Pengatur tab, remote, modal, toast
@@ -122,7 +121,7 @@ scripts/make-icons.ps1     Buat ulang ikon PNG
 ## 8. Batasan yang diketahui
 
 - Kuota pencarian gratis 100/hari; fallback Invidious otomatis bila habis atau tanpa key.
-- Lirik dari LRCLIB (komunitas) — sebagian lagu belum tersedia.
+- Lirik tidak ditampilkan aplikasi karena sudah ada di dalam video karaoke (untuk video non-karaoke tidak ada lirik).
 - Antrean tersimpan per perangkat (localStorage), bukan tersinkron antar perangkat.
 - Mikrofon bergantung dukungan browser TV; bila tidak didukung, tombol Mic dinonaktifkan otomatis.
 
@@ -132,6 +131,6 @@ scripts/make-icons.ps1     Buat ulang ikon PNG
 | --- | --- |
 | Pemutar tidak muncul | Dibuka lewat `file://`. Jalankan lewat server http/https atau GitHub Pages |
 | "Kuota API harian habis" | Kuota 100 pencarian habis; aplikasi otomatis pindah ke server cadangan |
-| Lirik tidak ada | Lagu belum ada di LRCLIB, atau judul YouTube sangat berbeda dari judul asli |
+| Lirik tidak muncul | Memang tidak ada panel lirik: lirik berada di dalam gambar video karaoke |
 | Tombol Mic mati | Browser TV tidak mendukung `getUserMedia` atau halaman bukan https/localhost |
 | Iklan masih muncul | Iklan dalam pemutar YouTube; lihat bagian 5 |

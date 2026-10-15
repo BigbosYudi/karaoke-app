@@ -99,7 +99,13 @@
     remove: function (index) {
       if (index < 0 || index >= items.length) { return; }
       items.splice(index, 1);
-      if (currentIndex >= items.length) { currentIndex = items.length - 1; }
+      if (!items.length) {
+        currentIndex = -1;
+      } else if (index < currentIndex) {
+        currentIndex -= 1;
+      } else if (index === currentIndex && currentIndex >= items.length) {
+        currentIndex = items.length - 1;
+      }
       emit();
     },
     move: function (index, delta) {

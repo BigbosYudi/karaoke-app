@@ -4,6 +4,11 @@
   var ORDER = ['search', 'queue', 'play', 'help'];
   var activeView = 'search';
   var toastTimer = null;
+  var started = false;
+  var clearBtn = null;
+  var clearArmed = false;
+  var clearTimer = null;
+  var errorStreak = 0;
 
   function $(id) { return document.getElementById(id); }
 
@@ -39,7 +44,11 @@
       tab.setAttribute('aria-selected', tab.getAttribute('data-view') === name ? 'true' : 'false');
     });
     if (window.location.hash !== '#' + name) {
-      window.history.replaceState(null, '', '#' + name);
+      try {
+        window.history.replaceState(null, '', '#' + name);
+      } catch (e) {
+        /* sebagian browser TV menolak replaceState (mis. di file://) */
+      }
     }
     focusFirstInView(name);
   }
@@ -69,7 +78,6 @@
     if (!video) { return; }
     setNowPlaying(video);
     Player.load(video);
-    Lyrics.load(video);
     showView('play');
     Player.updateToggleLabel();
   }
@@ -90,12 +98,47 @@
       showView('queue');
       return;
     }
-    if (Queue.current() && Queue.current().id === (document.body.dataset.playingId || '')) {
-      var next = Queue.nextIndex();
-      playIndex(next >= 0 ? next : 0);
+    var idx = Queue.currentIndex();
+    if (idx < 0) { playIndex(0); return; }
+
+    var item = Queue.at(idx);
+    var playingId = document.body.dataset.playingId || '';
+    if (item && item.id === playingId && Player.isPlaying()) {
+      toast('Lagu ini sedang diputar.');
+      showView('play');
       return;
     }
-    playIndex(0);
+    playIndex(idx);
+  }
+
+  function disarmClearQueue() {
+    clearArmed = false;
+    clearTimeout(clearTimer);
+    if (clearBtn) {
+      clearBtn.textContent = 'Kosongkan';
+      clearBtn.classList.remove('is-armed');
+    }
+  }
+
+  function requestClearQueue() {
+    if (!Queue.length()) {
+      toast('Antrean sudah kosong.');
+      return;
+    }
+    if (!clearArmed) {
+      clearArmed = true;
+      if (clearBtn) {
+        clearBtn.textContent = 'Yakin? Tekan lagi';
+        clearBtn.classList.add('is-armed');
+        clearBtn.focus();
+      }
+      clearTimeout(clearTimer);
+      clearTimer = setTimeout(disarmClearQueue, 4000);
+      return;
+    }
+    disarmClearQueue();
+    Queue.clear();
+    toast('Antrean dikosongkan.');
   }
 
   function openSettings() {
@@ -218,16 +261,53 @@
     var startQueue = $('btn-play-queue');
     if (startQueue) { startQueue.addEventListener('click', playFromStart); }
 
-    var clearQueue = $('btn-clear-queue');
-    if (clearQueue) {
-      clearQueue.addEventListener('click', function () {
-        if (!Queue.length()) { toast('Antrean sudah kosong.'); return; }
-        if (window.confirm('Hapus semua lagu dari antrean?')) {
-          Queue.clear();
-          toast('Antrean dikosongkan.');
-        }
-      });
+    clearBtn = $('btn-clear-queue');
+    if (clearBtn) { clearBtn.addEventListener('click', requestClearQueue); }
+  }
+
+  function errorLabel(code) {
+    if (code === 101 || code === 150) { return 'Pemilik video melarang pemutaran di luar YouTube'; }
+    if (code === 100) { return 'Video tidak tersedia atau sudah dihapus'; }
+    if (code === 2) { return 'Tautan video tidak dikenali'; }
+    return 'Video ini tidak dapat diputar di pemutar tersemat';
+  }
+
+  function handlePlayerState(state, code) {
+    if (state === 'playing') {
+      errorStreak = 0;
+      Player.updateToggleLabel();
+      return;
     }
+
+    if (state === 'error') {
+      var label = errorLabel(code);
+      var current = Queue.current();
+      var playingId = document.body.dataset.playingId || '';
+      var fromQueue = !!(current && current.id === playingId);
+      var next = Queue.nextIndex();
+
+      if (fromQueue && next >= 0 && errorStreak < 5) {
+        errorStreak += 1;
+        toast(label + '. Lanjut ke lagu berikutnya...');
+        playIndex(next);
+        return;
+      }
+      if (fromQueue && errorStreak >= 5) {
+        toast('Beberapa lagu berturut-turut tidak dapat diputar. Antrean dihentikan.');
+      } else {
+        toast(label + '.');
+      }
+      Player.updateToggleLabel();
+      return;
+    }
+
+    if (state === 'ended') {
+      errorStreak = 0;
+      var idx = Queue.nextIndex();
+      if (idx >= 0) { playIndex(idx); return; }
+      toast('Antrean selesai.');
+    }
+    Player.updateToggleLabel();
   }
 
   function bindModules() {
@@ -242,16 +322,7 @@
       Queue.render();
     });
 
-    Player.onTime(function (time) { Lyrics.setTime(time); });
-
-    Player.onState(function (state) {
-      if (state === 'ended') {
-        var idx = Queue.nextIndex();
-        if (idx >= 0) { playIndex(idx); return; }
-        toast('Antrean selesai.');
-      }
-      Player.updateToggleLabel();
-    });
+    Player.onState(handlePlayerState);
 
     document.addEventListener('appkeychange', function () {
       updateKeyChip();
@@ -275,6 +346,8 @@
     closeSettings: closeSettings,
     showView: showView,
     init: function () {
+      if (started) { return; }
+      started = true;
       Queue.init();
       Search.init();
       Player.init();

@@ -23,7 +23,6 @@
           'https://invidious.nerdvpn.de',
           'https://yewtu.be'
         ],
-    lrclibBase: 'https://lrclib.net',
     hasKey: function () {
       return !!this.youtubeApiKey;
     },

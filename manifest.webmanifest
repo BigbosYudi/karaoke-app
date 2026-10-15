@@ -1,7 +1,7 @@
 {
   "name": "Karaoke TV",
   "short_name": "Karaoke",
-  "description": "Karaoke keluarga dengan sumber video YouTube dan lirik tersinkron.",
+  "description": "Karaoke keluarga dari YouTube: cari lagu, susun antrean, dan putar di TV.",
   "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
