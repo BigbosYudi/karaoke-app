@@ -9,6 +9,7 @@
   var feedback = null;
   var wetGain = null;
   var running = false;
+  var starting = false;
 
   function isSupported() {
     return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext;
@@ -35,12 +36,14 @@
   }
 
   function start() {
+    if (starting || running) { return Promise.resolve(false); }
     if (!isSupported()) {
       if (window.App && App.toast) {
         App.toast('Browser TV ini tidak mengizinkan akses mikrofon.');
       }
       return Promise.resolve(false);
     }
+    starting = true;
     setButton('Mic: menyalakan...');
     return navigator.mediaDevices.getUserMedia({
       audio: {
@@ -67,6 +70,7 @@
       delay.connect(wetGain).connect(ctx.destination);
 
       applyEcho();
+      starting = false;
       running = true;
       setButton('Mic: hidup');
       if (window.App && App.toast) {
@@ -74,7 +78,18 @@
       }
       return true;
     }).catch(function (err) {
+      starting = false;
       running = false;
+      // Jangan tinggalkan track mikrofon tetap terbuka bila rangkaian audio gagal dibuat.
+      try { if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); } } catch (e) { /* diabaikan */ }
+      try { if (ctx) { ctx.close(); } } catch (e) { /* diabaikan */ }
+      stream = null;
+      ctx = null;
+      source = null;
+      dryGain = null;
+      delay = null;
+      feedback = null;
+      wetGain = null;
       setButton('Mic: mati');
       if (window.App && App.toast) {
         App.toast('Gagal mengakses mikrofon: ' + (err && err.name ? err.name : 'error'));
@@ -91,11 +106,17 @@
     ctx = null;
     stream = null;
     source = null;
+    dryGain = null;
+    delay = null;
+    feedback = null;
+    wetGain = null;
     running = false;
+    starting = false;
     setButton('Mic: mati');
   }
 
   function toggle() {
+    if (starting) { return Promise.resolve(false); }
     if (running) { stop(); return Promise.resolve(false); }
     return start();
   }

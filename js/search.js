@@ -12,6 +12,26 @@
     el.style.color = isError ? 'var(--danger)' : '';
   }
 
+  function fetchWithTimeout(url, ms) {
+    var limit = ms || (AppConfig.searchTimeoutMs || 12000);
+    var controller = (typeof AbortController === 'function') ? new AbortController() : null;
+    var options = controller ? { signal: controller.signal } : {};
+    var timer = null;
+    var timeout = new Promise(function (resolve, reject) {
+      timer = setTimeout(function () {
+        if (controller) { try { controller.abort(); } catch (e) { /* diabaikan */ } }
+        reject(new Error('koneksi terlalu lama'));
+      }, limit);
+    });
+    return Promise.race([fetch(url, options), timeout]).then(function (res) {
+      clearTimeout(timer);
+      return res;
+    }, function (err) {
+      clearTimeout(timer);
+      throw err;
+    });
+  }
+
   function parseIsoDuration(value) {
     var m = /^P(?:(\d+)D)?T?(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$/.exec(value || '');
     if (!m) { return 0; }
@@ -38,7 +58,7 @@
       + '?part=snippet&type=video&maxResults=25&safeSearch=none&q='
       + encodeURIComponent(query) + '&key=' + encodeURIComponent(key);
 
-    return fetch(searchUrl).then(function (res) {
+    return fetchWithTimeout(searchUrl).then(function (res) {
       return res.json().then(function (data) {
         if (!res.ok || data.error) {
           var reason = data.error && data.error.errors && data.error.errors[0]
@@ -57,7 +77,7 @@
           + '?part=contentDetails&id=' + ids.join(',')
           + '&key=' + encodeURIComponent(key);
 
-        return fetch(detailUrl).then(function (r2) { return r2.json(); }).then(function (d2) {
+        return fetchWithTimeout(detailUrl).then(function (r2) { return r2.json(); }).then(function (d2) {
           var durations = {};
           (d2.items || []).forEach(function (v) {
             durations[v.id] = parseIsoDuration(v.contentDetails && v.contentDetails.duration);
@@ -88,7 +108,7 @@
       }
       var base = instances[i].replace(/\/$/, '');
       var url = base + '/api/v1/search?q=' + encodeURIComponent(query) + '&type=video';
-      return fetch(url).then(function (res) {
+      return fetchWithTimeout(url).then(function (res) {
         if (!res.ok) { throw new Error('HTTP ' + res.status); }
         return res.json();
       }).then(function (data) {

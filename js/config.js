@@ -12,10 +12,24 @@
     }
   }
 
-  var stored = readUrlKey() || localStorage.getItem(LS_KEY) || env.youtubeApiKey || '';
+  // Sebagian browser TV memblokir localStorage; jangan sampai membuat aplikasi gagal start.
+  function storageGet(key) {
+    try { return localStorage.getItem(key) || ''; } catch (e) { return ''; }
+  }
+
+  function storageSet(key, value) {
+    try { localStorage.setItem(key, value); } catch (e) { /* diabaikan */ }
+  }
+
+  function storageRemove(key) {
+    try { localStorage.removeItem(key); } catch (e) { /* diabaikan */ }
+  }
+
+  var stored = readUrlKey() || storageGet(LS_KEY) || env.youtubeApiKey || '';
 
   window.AppConfig = {
     youtubeApiKey: stored,
+    searchTimeoutMs: 12000,
     invidiousInstances: env.invidiousInstances && env.invidiousInstances.length
       ? env.invidiousInstances
       : [
@@ -29,9 +43,9 @@
     setKey: function (key) {
       this.youtubeApiKey = (key || '').trim();
       if (this.youtubeApiKey) {
-        localStorage.setItem(LS_KEY, this.youtubeApiKey);
+        storageSet(LS_KEY, this.youtubeApiKey);
       } else {
-        localStorage.removeItem(LS_KEY);
+        storageRemove(LS_KEY);
       }
       document.dispatchEvent(new CustomEvent('appkeychange'));
     },

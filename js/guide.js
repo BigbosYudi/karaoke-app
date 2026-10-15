@@ -11,8 +11,8 @@
   }
 
   function reportSupport() {
-    var card = document.querySelectorAll('#view-help .card-help');
-    var target = card[card.length - 1];
+    var cards = document.querySelectorAll('#view-help .card-help');
+    var target = document.getElementById('card-limits') || cards[cards.length - 1];
     if (!target || target.querySelector('.support-note')) { return; }
 
     var notes = [];
@@ -61,7 +61,7 @@
 
   function appendKeyNote() {
     var cards = document.querySelectorAll('#view-help .card-help');
-    var card = cards[2];
+    var card = document.getElementById('card-key') || cards[2];
     if (!card || card.querySelector('.key-note')) { return; }
     var p = document.createElement('p');
     p.className = 'key-note';

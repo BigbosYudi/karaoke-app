@@ -94,6 +94,7 @@
       return;
     }
     var url = 'https://www.youtube.com/watch?v=' + encodeURIComponent(id);
+    if (Player.isPlaying()) { Player.toggle(); }
     var opened = window.open(url, '_blank');
     if (opened) {
       toast('Membuka YouTube untuk video ini...');
@@ -378,6 +379,11 @@
       } else {
         toast('Sumber pencarian: server cadangan tanpa key.');
       }
+    });
+
+    // Jangan biarkan audio terus berbunyi saat aplikasi ditinggalkan (mis. pindah ke aplikasi YouTube).
+    document.addEventListener('visibilitychange', function () {
+      if (document.hidden && Player.isPlaying()) { Player.toggle(); }
     });
   }
 
