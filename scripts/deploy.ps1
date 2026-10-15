@@ -42,11 +42,11 @@ try {
   $current = (git branch --show-current).Trim()
   if ($current -ne $branch) { git branch -M $branch | Out-Null }
 
-  $existing = (git remote get-url origin 2>$null)
-  if ($LASTEXITCODE -ne 0 -or [string]::IsNullOrWhiteSpace($existing)) {
-    git remote add origin $remoteUrl | Out-Null
-  } else {
+  $remotes = @(git remote)
+  if ($remotes -contains 'origin') {
     git remote set-url origin $remoteUrl | Out-Null
+  } else {
+    git remote add origin $remoteUrl | Out-Null
   }
   Write-Host "Remote: $remoteUrl"
 
@@ -65,8 +65,12 @@ echo $token
   $env:GIT_CONFIG_VALUE_0 = "AUTHORIZATION: basic $b64"
 
   try {
-    git push -u origin $branch
-    if ($LASTEXITCODE -ne 0) { throw "git push gagal (kode $LASTEXITCODE). Periksa nama repo dan izin token (Contents: Read and write)." }
+    $oldPref = $ErrorActionPreference
+    $ErrorActionPreference = 'Continue'
+    git push -u origin $branch 2>&1 | ForEach-Object { Write-Host $_ }
+    $pushCode = $LASTEXITCODE
+    $ErrorActionPreference = $oldPref
+    if ($pushCode -ne 0) { throw "git push gagal (kode $pushCode). Periksa nama repo dan izin token (Contents: Read and write)." }
     Write-Host "Push berhasil." -ForegroundColor Green
   } finally {
     Remove-Item -LiteralPath $askPass -Force -ErrorAction SilentlyContinue
