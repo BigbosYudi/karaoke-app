@@ -1,0 +1,125 @@
+# Karaoke TV
+
+Aplikasi karaoke untuk **TV Android** (juga jalan di HP/laptop): cari lagu dari YouTube, susun antrean, putar dengan pemutar resmi YouTube, dan tampilkan lirik yang mengikuti lagu secara otomatis.
+
+Gratis, tanpa server, tanpa iklan milik aplikasi.
+
+---
+
+## 1. Cara pakai cepat (tanpa deploy)
+
+1. Buka terminal di folder ini.
+2. Jalankan server lokal:
+   ```powershell
+   npx --yes serve -l 8080 .
+   ```
+   atau, bila Python terpasang:
+   ```powershell
+   python -m http.server 8080
+   ```
+3. Buka `http://localhost:8080` di komputer untuk mencoba.
+4. Untuk TV: buka `http://IP-KOMPUTER:8080` dari browser TV (keduanya harus di Wi-Fi yang sama).
+
+> Pemutar YouTube mewajibkan alamat `http://` atau `https://`. Membuka `index.html` langsung (`file://`) tidak selalu bekerja.
+
+## 2. Pasang API key YouTube (disarankan)
+
+Tanpa key, pencarian memakai server publik Invidious yang bisa berubah-ubah. Dengan key gratis, pencarian stabil (kuota 100 pencarian/hari).
+
+1. Buka <https://console.cloud.google.com> dengan akun Google.
+2. Buat project baru.
+3. **APIs & Services → Library** → cari **YouTube Data API v3** → **Enable**.
+4. **APIs & Services → Credentials → Create credentials → API key**.
+5. Batasi key:
+   - **API restrictions** → YouTube Data API v3
+   - **Application restrictions** → Websites → tambah `http://localhost/*` dan `https://*.github.io/*`
+6. Ada dua cara memakai key:
+   - **Cara A (di TV):** tombol **Setelan** di aplikasi → tempel key → Simpan. Key tersimpan di browser TV.
+   - **Cara B (file .env):**
+     ```powershell
+     Copy-Item .env.example .env
+     # buka .env, isi YOUTUBE_API_KEY=AIza...
+     powershell -ExecutionPolicy Bypass -File scripts\apply-env.ps1
+     ```
+     Perintah terakhir menghasilkan `js/config.local.js` yang dipakai saat aplikasi diload. File ini **tidak** ikut ter-commit.
+
+## 3. Deploy ke GitHub Pages
+
+```powershell
+# isi .env dulu (lihat bagian 2, Cara B), lalu:
+powershell -ExecutionPolicy Bypass -File scripts\apply-env.ps1
+
+git add .
+git commit -m "Aplikasi karaoke TV"
+git branch -M main
+git remote add origin https://github.com/USERNAME/karaoke.git
+git push -u origin main
+```
+
+Lalu di GitHub: **Settings → Pages → Source: Deploy from a branch → Branch: main / (root) → Save**.
+Alamat aplikasi menjadi `https://USERNAME.github.io/karaoke/`.
+
+> Saat `git push`, gunakan Personal Access Token (scope **Contents: Read and write**) sebagai password, bukan login CLI global. Simpan token di berkas lokal, jangan di-commit.
+
+## 4. Pemasangan di TV Android
+
+1. Pasang browser **TV Bro** (gratis, dioptimalkan untuk remote) dari Google Play di TV.
+2. Buka alamat aplikasi.
+3. Simpan sebagai bookmark/shortcut di TV Bro.
+4. Pindah tab cepat: tombol angka **1–4** pada remote.
+
+## 5. Blokir iklan (2 lapis)
+
+**Lapis 1 — AdGuard DNS (seluruh TV):**
+- **Setelan → Network & Internet → Private DNS → Nama host penyedia DNS pribadi** → isi `dns.adguard-dns.com`
+- Bila TV tidak punya menu Private DNS, set DNS router ke `94.140.14.14` dan `94.140.15.15`.
+
+**Lapis 2 — aplikasi bersih:** aplikasi memakai `youtube-nocookie.com`, tanpa tracker/analytics/iklan sendiri.
+
+Catatan: iklan pre-roll/mid-roll YouTube sebagian masih dapat muncul karena berasal dari domain video yang sama. Untuk nol iklan YouTube diperlukan pemblokir dalam-halaman (mis. Firefox sideload + uBlock Origin) — di luar cakupan panduan ini.
+
+## 6. Kontrol remote
+
+| Tombol | Fungsi |
+| --- | --- |
+| Panah | Pindah fokus antar tombol |
+| OK | Pilih |
+| 1–4 | Pindah tab: Cari, Antre, Putar, Bantuan |
+| Back / Esc | Tutup Setelan / keluar dari layar penuh |
+
+## 7. Struktur berkas
+
+```
+index.html                 Halaman utama (4 tab)
+manifest.webmanifest       Metadata PWA
+sw.js                      Service worker (mode offline shell)
+css/style.css              Tampilan 10-foot UI
+js/config.js               Konfigurasi + fungsi bantu
+js/config.local.js         Hasil scripts/apply-env.ps1 (tidak di-commit)
+js/queue.js                Antrean lagu (localStorage)
+js/search.js               Pencarian YouTube Data API + fallback Invidious
+js/player.js               Pemutar YouTube IFrame + kontrol + layar penuh
+js/lyrics.js               Lirik LRCLIB + parser LRC + highlight sinkron
+js/mic.js                  Mikrofon + echo (Web Audio API)
+js/guide.js               Deteksi dukungan & tautan ke Setelan
+js/app.js                  Pengatur tab, remote, modal, toast
+scripts/apply-env.ps1      Ubah .env menjadi js/config.local.js
+scripts/make-icons.ps1     Buat ulang ikon PNG
+```
+
+## 8. Batasan yang diketahui
+
+- Kuota pencarian gratis 100/hari; fallback Invidious otomatis bila habis atau tanpa key.
+- Lirik dari LRCLIB (komunitas) — sebagian lagu belum tersedia.
+- Antrean tersimpan per perangkat (localStorage), bukan tersinkron antar perangkat.
+- Mikrofon bergantung dukungan browser TV; bila tidak didukung, tombol Mic dinonaktifkan otomatis.
+
+## 9. Pemecahan masalah
+
+| Gejala | Penyebab & solusi |
+| --- | --- |
+| Pemutar tidak muncul | Dibuka lewat `file://`. Jalankan lewat server http/https atau GitHub Pages |
+| "Kuota API harian habis" | Kuota 100 pencarian habis; aplikasi otomatis pindah ke server cadangan |
+| Lirik tidak ada | Lagu belum ada di LRCLIB, atau judul YouTube sangat berbeda dari judul asli |
+| Tombol Mic mati | Browser TV tidak mendukung `getUserMedia` atau halaman bukan https/localhost |
+| Iklan masih muncul | Iklan dalam pemutar YouTube; lihat bagian 5 |

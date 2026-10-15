@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Karaoke TV</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<meta name="theme-color" content="#0b0b12">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app">
+
+  <header class="topbar">
+    <div class="brand">KARAOKE<span class="brand-dot">TV</span></div>
+    <nav class="tabs" id="tabs" role="tablist" aria-label="Menu utama">
+      <button class="tab" data-view="search" role="tab" aria-selected="true">Cari</button>
+      <button class="tab" data-view="queue" role="tab" aria-selected="false">Antre</button>
+      <button class="tab" data-view="play" role="tab" aria-selected="false">Putar</button>
+      <button class="tab" data-view="help" role="tab" aria-selected="false">Bantuan</button>
+    </nav>
+    <div class="topbar-right">
+      <button class="chip" id="key-status" title="Status API key">Key: tidak ada</button>
+      <button class="icon-btn" id="btn-settings">Setelan</button>
+    </div>
+  </header>
+
+  <main id="main">
+
+    <section class="view is-active" id="view-search" role="tabpanel" aria-label="Cari lagu">
+      <form class="searchbar" id="search-form" autocomplete="off">
+        <input id="search-input" type="search" placeholder="Cari judul lagu atau artis..." aria-label="Kata kunci pencarian">
+        <button class="btn primary" type="submit">Cari</button>
+      </form>
+      <p class="status" id="search-status" role="status">Ketik kata kunci lalu tekan Cari.</p>
+      <ul class="cards" id="search-results"></ul>
+    </section>
+
+    <section class="view" id="view-queue" role="tabpanel" aria-label="Antrean lagu">
+      <div class="row-head">
+        <h2>Antrean Lagu <span class="muted" id="queue-count"></span></h2>
+        <div class="row-actions">
+          <button class="btn" id="btn-play-queue">Mulai Putar Antrean</button>
+          <button class="btn ghost" id="btn-clear-queue">Kosongkan</button>
+        </div>
+      </div>
+      <ul class="queue" id="queue-list"></ul>
+      <p class="empty" id="queue-empty">Antrean masih kosong. Buka tab <b>Cari</b> untuk menambah lagu.</p>
+    </section>
+
+    <section class="view" id="view-play" role="tabpanel" aria-label="Pemutar">
+      <div class="stage" id="stage">
+        <div class="player-col">
+          <div class="player-wrap" id="player-wrap">
+            <div id="player"></div>
+            <div class="placeholder" id="player-placeholder">
+              <p>Belum ada lagu yang diputar.</p>
+              <p class="muted">Pilih lagu dari tab Antre atau tekan "Mulai Putar Antrean".</p>
+            </div>
+          </div>
+          <div class="now">
+            <h2 id="now-title">-</h2>
+            <p class="muted" id="now-sub">-</p>
+          </div>
+          <div class="controls" id="controls">
+            <button class="btn" id="btn-prev">Sebelumnya</button>
+            <button class="btn primary" id="btn-toggle-play">Putar</button>
+            <button class="btn" id="btn-next">Berikutnya</button>
+            <button class="btn" id="btn-fullscreen">Layar Penuh</button>
+            <button class="btn" id="btn-mic">Mic: mati</button>
+            <label class="slider" for="echo-range">Echo
+              <input type="range" id="echo-range" min="0" max="100" value="35">
+            </label>
+          </div>
+        </div>
+        <aside class="lyrics" id="lyrics-panel" aria-label="Lirik">
+          <div class="lyrics-head">
+            <span>Lirik</span>
+            <span class="muted" id="lyrics-status"></span>
+          </div>
+          <div class="lyrics-body" id="lyrics-body">
+            <p class="muted">Lirik akan muncul otomatis saat lagu diputar.</p>
+          </div>
+        </aside>
+      </div>
+    </section>
+
+    <section class="view" id="view-help" role="tabpanel" aria-label="Bantuan">
+      <div class="help">
+
+        <article class="card-help">
+          <h2>1. Buka aplikasi di TV Android</h2>
+          <ol>
+            <li>Pasang browser <b>TV Bro</b> (gratis, dioptimalkan untuk remote) dari Google Play di TV.</li>
+            <li>Buka URL aplikasi ini di TV Bro.</li>
+            <li>Simpan lewat menu <b>Bookmark</b> / <b>Shortcut</b> supaya tidak perlu mengetik URL lagi.</li>
+            <li>Aktifkan <b>voice search</b> TV Bro bila remote Anda punya mikrofon — lebih cepat daripada mengetik.</li>
+          </ol>
+          <p class="muted">Catatan: fitur "Install PWA" tidak selalu tersedia di browser TV. Halaman tetap berjalan normal tanpa dipasang.</p>
+        </article>
+
+        <article class="card-help">
+          <h2>2. Blokir iklan (2 lapis, gratis)</h2>
+          <p><b>Lapis 1 — AdGuard DNS (berlaku untuk seluruh TV):</b></p>
+          <ol>
+            <li>Masuk <b>Setelan TV &rarr; Network &amp; Internet &rarr; Private DNS</b>.</li>
+            <li>Pilih "Nama host penyedia DNS pribadi" lalu isi: <code>dns.adguard-dns.com</code></li>
+            <li>Simpan. Bila TV tidak memiliki menu Private DNS, isi DNS manual di router: <code>94.140.14.14</code> dan <code>94.140.15.15</code>.</li>
+          </ol>
+          <p><b>Lapis 2 — aplikasi bersih:</b> aplikasi ini memakai pemutar resmi <code>youtube-nocookie.com</code> dan tidak memasang iklan, tracker, maupun analytics sendiri.</p>
+          <p class="muted">Yang perlu diketahui: iklan pre-roll/mid-roll dari YouTube sebagian masih bisa muncul karena berasal dari domain video yang sama dengan lagunya. Kedua lapis di atas menghilangkan iklan situs dan tracker, tetapi tidak menjamin 100% bebas iklan YouTube.</p>
+        </article>
+
+        <article class="card-help">
+          <h2>3. API key YouTube (opsional tapi disarankan)</h2>
+          <p>Tanpa key, pencarian memakai server publik Invidious yang dapat berubah-ubah. Dengan key gratis, pencarian lebih cepat dan stabil (kuota 100 pencarian/hari).</p>
+          <ol>
+            <li>Buka <code>console.cloud.google.com</code> dengan akun Google Anda.</li>
+            <li>Buat project baru, lalu buka <b>APIs &amp; Services &rarr; Library</b>.</li>
+            <li>Cari <b>YouTube Data API v3</b> &rarr; klik <b>Enable</b>.</li>
+            <li>Buka <b>APIs &amp; Services &rarr; Credentials &rarr; Create credentials &rarr; API key</b>.</li>
+            <li>Batasi: <b>API restrictions</b> = YouTube Data API v3; <b>Application restrictions</b> = Websites, isi <code>https://*.github.io/*</code> dan <code>http://localhost/*</code>.</li>
+            <li>Salin key (<code>AIza...</code>), lalu tempel di <b>Setelan</b> aplikasi ini, atau simpan di file <code>.env</code> pada komputer.</li>
+          </ol>
+          <button class="btn" id="btn-open-settings">Buka Setelan</button>
+        </article>
+
+        <article class="card-help">
+          <h2>4. Mikrofon + echo (opsional)</h2>
+          <p>Untuk menyanyi, sambungkan mikrofon USB atau headset ke TV, lalu tekan tombol <b>Mic</b> di tab Putar. Gunakan headset bila mungkin agar tidak terjadi umpan balik (suara melengking).</p>
+          <p class="muted" id="help-mic-note"></p>
+        </article>
+
+        <article class="card-help">
+          <h2>5. Kontrol dengan remote</h2>
+          <ul>
+            <li><b>Panah</b> untuk berpindah fokus antar tombol.</li>
+            <li><b>OK</b> untuk memilih.</li>
+            <li><b>Tombol angka 1-4</b> untuk pindah tab (Cari, Antre, Putar, Bantuan).</li>
+            <li><b>Back/Esc</b> untuk menutup jendela Setelan atau keluar dari layar penuh.</li>
+          </ul>
+        </article>
+
+        <article class="card-help">
+          <h2>6. Batasan aplikasi</h2>
+          <ul>
+            <li>Kuota pencarian gratis 100/hari (fallback Invidious otomatis bila habis).</li>
+            <li>Lirik berasal dari layanan komunitas LRCLIB; sebagian lagu mungkin belum tersedia.</li>
+            <li>Antrean tersimpan di penyimpanan browser TV, bukan di server.</li>
+          </ul>
+        </article>
+
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<div class="modal" id="settings-modal" hidden>
+  <div class="modal-box" role="dialog" aria-modal="true" aria-label="Setelan">
+    <h2>Setelan</h2>
+    <label class="field" for="api-key-input">
+      <span>API key YouTube Data API v3</span>
+      <input id="api-key-input" type="text" placeholder="AIza..." autocomplete="off" spellcheck="false">
+    </label>
+    <p class="muted">Key disimpan hanya di browser TV ini. Kuota gratis: 100 pencarian/hari.</p>
+    <div class="modal-actions">
+      <button class="btn primary" id="btn-save-key">Simpan</button>
+      <button class="btn ghost" id="btn-clear-key">Hapus Key</button>
+      <button class="btn" id="btn-close-settings">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script src="js/config.local.js" onerror="void 0"></script>
+<script src="js/config.js"></script>
+<script src="js/queue.js"></script>
+<script src="js/search.js"></script>
+<script src="js/player.js"></script>
+<script src="js/lyrics.js"></script>
+<script src="js/mic.js"></script>
+<script src="js/guide.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
