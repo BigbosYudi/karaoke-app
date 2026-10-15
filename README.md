@@ -4,6 +4,9 @@ Aplikasi karaoke untuk **TV Android** (juga jalan di HP/laptop): cari lagu dari 
 
 Gratis, tanpa server, tanpa iklan milik aplikasi.
 
+**Alamat online:** <https://bigbosyudi.github.io/karaoke-app/>
+**Kode sumber:** <https://github.com/BigbosYudi/karaoke-app>
+
 ---
 
 ## 1. Cara pakai cepat (tanpa deploy)
@@ -45,21 +48,30 @@ Tanpa key, pencarian memakai server publik Invidious yang bisa berubah-ubah. Den
 
 ## 3. Deploy ke GitHub Pages
 
-```powershell
-# isi .env dulu (lihat bagian 2, Cara B), lalu:
-powershell -ExecutionPolicy Bypass -File scripts\apply-env.ps1
+Isi `.env` dulu (bagian 2, Cara B), lalu cara tercepat:
 
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts\deploy.ps1
+```
+
+Skrip itu membaca `GITHUB_USER`, `GITHUB_REPO`, dan `GIT_TOKEN` dari `.env`, menyetel remote, push branch `main`, lalu mencoba mengaktifkan Pages.
+
+Bila melakukannya manual:
+
+```powershell
 git add .
 git commit -m "Aplikasi karaoke TV"
 git branch -M main
-git remote add origin https://github.com/USERNAME/karaoke.git
+git remote add origin https://github.com/BigbosYudi/karaoke-app.git
 git push -u origin main
 ```
 
 Lalu di GitHub: **Settings → Pages → Source: Deploy from a branch → Branch: main / (root) → Save**.
-Alamat aplikasi menjadi `https://USERNAME.github.io/karaoke/`.
+Alamat aplikasi: `https://bigbosyudi.github.io/karaoke-app/`.
 
-> Saat `git push`, gunakan Personal Access Token (scope **Contents: Read and write**) sebagai password, bukan login CLI global. Simpan token di berkas lokal, jangan di-commit.
+Catatan untuk repo: Pages gratis hanya untuk repo **publik**. `js/config.local.js` (berisi API key untuk pemakaian lokal) sengaja diabaikan git agar key tidak pernah publik; di versi online key dimasukkan sekali lewat tombol **Setelan** di browser TV.
+
+> Saat `git push`, gunakan Personal Access Token (izin **Contents: Read and write**) yang disimpan di `.env`, bukan login CLI global.
 
 ## 4. Pemasangan di TV Android
 

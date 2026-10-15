@@ -5,8 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Karaoke TV</title>
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
-<link rel="apple-touch-icon" href="icons/icon-192.png">
+<link rel="icon" type="image/png" sizes="32x32" href="icons/favicon-32.png">
+<link rel="icon" type="image/png" sizes="48x48" href="icons/favicon-48.png">
+<link rel="shortcut icon" href="icons/favicon-48.png">
+<link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <meta name="theme-color" content="#0b0b12">
 <link rel="stylesheet" href="css/style.css">
 </head>
@@ -14,7 +16,10 @@
 <div id="app">
 
   <header class="topbar">
-    <div class="brand">KARAOKE<span class="brand-dot">TV</span></div>
+    <div class="brand">
+      <span class="brand-logo"><img src="icons/logo-96.png" alt="Bigbos Yudi"></span>
+      <span class="brand-text">KARAOKE<span class="brand-dot">TV</span></span>
+    </div>
     <nav class="tabs" id="tabs" role="tablist" aria-label="Menu utama">
       <button class="tab" data-view="search" role="tab" aria-selected="true">Cari</button>
       <button class="tab" data-view="queue" role="tab" aria-selected="false">Antre</button>
@@ -56,6 +61,7 @@
           <div class="player-wrap" id="player-wrap">
             <div id="player"></div>
             <div class="placeholder" id="player-placeholder">
+              <span class="placeholder-logo"><img src="icons/logo-512.png" alt=""></span>
               <p>Belum ada lagu yang diputar.</p>
               <p class="muted">Pilih lagu dari tab Antre atau tekan "Mulai Putar Antrean".</p>
             </div>

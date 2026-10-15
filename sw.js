@@ -1,4 +1,4 @@
-var CACHE_NAME = 'karaoke-tv-v1';
+var CACHE_NAME = 'karaoke-tv-v2';
 var ASSETS = [
   './',
   './index.html',
@@ -12,9 +12,14 @@ var ASSETS = [
   './js/mic.js',
   './js/guide.js',
   './js/app.js',
-  './icons/icon.svg',
+  './icons/logo-96.png',
+  './icons/logo-512.png',
   './icons/icon-192.png',
-  './icons/icon-512.png'
+  './icons/icon-512.png',
+  './icons/icon-maskable-512.png',
+  './icons/apple-touch-icon.png',
+  './icons/favicon-32.png',
+  './icons/favicon-48.png'
 ];
 
 self.addEventListener('install', function (event) {

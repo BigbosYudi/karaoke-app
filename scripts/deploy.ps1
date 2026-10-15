@@ -80,19 +80,31 @@ echo $token
     Remove-Item Env:GIT_CONFIG_VALUE_0 -ErrorAction SilentlyContinue
   }
 
-  # Coba aktifkan GitHub Pages otomatis (bila token punya izin Pages).
+  # Cek dulu apakah GitHub Pages sudah aktif.
+  $headers = @{
+    'Authorization' = "Bearer $token"
+    'Accept' = 'application/vnd.github+json'
+    'User-Agent' = 'karaoke-deploy'
+  }
+  $pagesActive = $false
   try {
-    $body = @{ source = @{ branch = $branch; path = '/' } } | ConvertTo-Json -Depth 4
-    $headers = @{
-      'Authorization' = "Bearer $token"
-      'Accept' = 'application/vnd.github+json'
-      'User-Agent' = 'karaoke-deploy'
-    }
-    $result = Invoke-RestMethod -Method Post -Uri "https://api.github.com/repos/$user/$repo/pages" -Headers $headers -Body $body -ContentType 'application/json' -TimeoutSec 30
-    Write-Host "GitHub Pages diaktifkan: $($result.html_url)" -ForegroundColor Green
+    $existing = Invoke-RestMethod -Method Get -Uri "https://api.github.com/repos/$user/$repo/pages" -Headers $headers -TimeoutSec 30
+    $pagesActive = $true
+    Write-Host "GitHub Pages sudah aktif: $($existing.html_url)" -ForegroundColor Green
   } catch {
-    Write-Host "Pages belum diaktifkan otomatis (bisa jadi sudah aktif atau token tanpa izin Pages)." -ForegroundColor Yellow
-    Write-Host "Aktifkan manual: Settings -> Pages -> Source: Deploy from a branch -> $branch / (root) -> Save"
+    $pagesActive = $false
+  }
+
+  # Aktifkan Pages bila belum aktif (butuh izin Pages: Read and write pada token).
+  if (-not $pagesActive) {
+    try {
+      $body = @{ source = @{ branch = $branch; path = '/' } } | ConvertTo-Json -Depth 4
+      $result = Invoke-RestMethod -Method Post -Uri "https://api.github.com/repos/$user/$repo/pages" -Headers $headers -Body $body -ContentType 'application/json' -TimeoutSec 30
+      Write-Host "GitHub Pages diaktifkan: $($result.html_url)" -ForegroundColor Green
+    } catch {
+      Write-Host "Pages belum aktif dan tidak bisa diaktifkan otomatis (token tanpa izin Pages)." -ForegroundColor Yellow
+      Write-Host "Aktifkan manual: Settings -> Pages -> Source: Deploy from a branch -> $branch / (root) -> Save"
+    }
   }
 
   Write-Host "`nAlamat aplikasi (tunggu 1-3 menit saat pertama kali):" -ForegroundColor Cyan
