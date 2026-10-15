@@ -70,6 +70,49 @@
     document.addEventListener('appkeychange', updateKeyNote);
   }
 
+  function browserLabel() {
+    var ua = navigator.userAgent || '';
+    var m = /Chrome\/(\d+)/.exec(ua) || /Chromium\/(\d+)/.exec(ua);
+    if (m) { return 'Chromium ' + m[1]; }
+    m = /Firefox\/(\d+)/.exec(ua);
+    if (m) { return 'Firefox ' + m[1]; }
+    m = /Version\/(\d+).*Safari/.exec(ua);
+    if (m) { return 'Safari ' + m[1]; }
+    return 'tidak terdeteksi';
+  }
+
+  function androidLabel() {
+    var m = /Android\s+([\d.]+)/.exec(navigator.userAgent || '');
+    return m ? 'Android ' + m[1] : 'bukan Android / tidak terbaca';
+  }
+
+  function diagnose() {
+    var yes = function (v) { return v ? 'ya' : 'tidak'; };
+    var rows = [];
+    rows.push(['Browser', browserLabel()]);
+    rows.push(['Sistem', androidLabel()]);
+    rows.push(['Layar', window.screen.width + 'x' + window.screen.height + ' @' + (window.devicePixelRatio || 1) + 'x']);
+    rows.push(['Alamat', window.location.protocol + '//' + window.location.host + window.location.pathname]);
+    rows.push(['Konteks aman (https/localhost)', yes(!!window.isSecureContext)]);
+    rows.push(['fetch + Promise', yes(typeof fetch === 'function' && typeof Promise === 'function')]);
+    rows.push(['URLSearchParams', yes(typeof URLSearchParams === 'function')]);
+    rows.push(['Service worker', yes('serviceWorker' in navigator)]);
+    rows.push(['Layar penuh', yes(!!(document.fullscreenEnabled || document.webkitFullscreenEnabled))]);
+    rows.push(['Mikrofon (getUserMedia)', yes(!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext))]);
+    rows.push(['Penyimpanan antrean', yes(typeof localStorage !== 'undefined')]);
+    rows.push(['Sumber pencarian', window.AppConfig && AppConfig.youtubeApiKey ? 'YouTube Data API' : 'server cadangan (tanpa key)']);
+    rows.push(['Koneksi', navigator.onLine === false ? 'offline' : 'online']);
+    return rows;
+  }
+
+  function appendDiagnostics() {
+    var list = document.getElementById('diag-list');
+    if (!list) { return; }
+    list.innerHTML = diagnose().map(function (row) {
+      return '<li><b>' + Utils.escapeHtml(row[0]) + ':</b> ' + Utils.escapeHtml(String(row[1])) + '</li>';
+    }).join('');
+  }
+
   window.Guide = {
     init: function () {
       var btn = document.getElementById('btn-open-settings');
@@ -81,6 +124,8 @@
       appendBookmarkHint();
       appendKeyNote();
       reportSupport();
+      appendDiagnostics();
+      document.addEventListener('appkeychange', appendDiagnostics);
     }
   };
 })();

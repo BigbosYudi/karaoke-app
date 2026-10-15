@@ -75,6 +75,7 @@
             <button class="btn primary" id="btn-toggle-play">Putar</button>
             <button class="btn" id="btn-next">Berikutnya</button>
             <button class="btn" id="btn-fullscreen">Layar Penuh</button>
+            <button class="btn ghost" id="btn-open-youtube" hidden>Buka di YouTube</button>
             <button class="btn" id="btn-mic">Mic: mati</button>
             <label class="slider" for="echo-range">Echo
               <input type="range" id="echo-range" min="0" max="100" value="35">
@@ -150,7 +151,15 @@
             <li>Kuota pencarian gratis 100/hari (fallback Invidious otomatis bila habis).</li>
             <li>Antrean tersimpan di penyimpanan browser TV, bukan di server.</li>
             <li>Lirik sudah menyatu di dalam video karaoke, jadi aplikasi tidak menambah panel lirik sendiri.</li>
+            <li>Video yang menolak diputar di pemutar tersemat dilewati otomatis; tekan <b>Buka di YouTube</b> untuk menontonnya lewat aplikasi YouTube di TV.</li>
+            <li>Bila video tidak mulai sendiri (kebijakan autoplay browser), tekan tombol <b>Putar</b> sekali.</li>
           </ul>
+        </article>
+
+        <article class="card-help">
+          <h2>7. Diagnostik perangkat ini</h2>
+          <p class="muted">Bila ada yang tidak jalan di TV/STB Anda, kirimkan isi daftar ini.</p>
+          <ul class="diag" id="diag-list"></ul>
         </article>
 
       </div>

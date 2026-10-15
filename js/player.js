@@ -9,6 +9,8 @@
   var apiQueue = [];
   var pendingVideo = null;
   var pollTimer = null;
+  var autoplayTimer = null;
+  var userPaused = false;
   var timeHandlers = [];
   var stateHandlers = [];
 
@@ -92,9 +94,11 @@
             try { player.playVideo(); } catch (e) { /* diabaikan */ }
           }
           startPolling();
+          watchAutoplay();
         },
         onStateChange: function (event) {
           if (event.data === window.YT.PlayerState.ENDED) {
+            clearTimeout(autoplayTimer);
             stateHandlers.forEach(function (fn) { fn('ended'); });
           } else if (event.data === window.YT.PlayerState.PLAYING) {
             hidePlaceholder();
@@ -106,10 +110,22 @@
           }
         },
         onError: function (event) {
+          clearTimeout(autoplayTimer);
           stateHandlers.forEach(function (fn) { fn('error', event && event.data); });
         }
       }
     });
+  }
+
+  function watchAutoplay() {
+    clearTimeout(autoplayTimer);
+    autoplayTimer = setTimeout(function () {
+      if (!ready || !player || userPaused) { return; }
+      var state = -1;
+      try { state = player.getPlayerState(); } catch (e) { state = -1; }
+      if (state === window.YT.PlayerState.PLAYING || state === window.YT.PlayerState.BUFFERING) { return; }
+      stateHandlers.forEach(function (fn) { fn('blocked'); });
+    }, 3500);
   }
 
   function startPolling() {
@@ -125,6 +141,7 @@
   function load(video) {
     if (!video || !video.id) { return; }
     hidePlaceholder();
+    userPaused = false;
     pendingVideo = video;
 
     if (player) {
@@ -132,11 +149,13 @@
       if (video.id === loadedVideoId) {
         try { player.playVideo(); } catch (e) { /* diabaikan */ }
         startPolling();
+        watchAutoplay();
         return;
       }
       loadedVideoId = video.id;
       try { player.loadVideoById(video.id); } catch (e) { /* diabaikan */ }
       startPolling();
+      watchAutoplay();
       return;
     }
 
@@ -157,7 +176,15 @@
   function toggle() {
     if (!player || !ready) { return; }
     try {
-      if (isPlaying()) { player.pauseVideo(); } else { player.playVideo(); }
+      if (isPlaying()) {
+        userPaused = true;
+        clearTimeout(autoplayTimer);
+        player.pauseVideo();
+      } else {
+        userPaused = false;
+        player.playVideo();
+        watchAutoplay();
+      }
     } catch (e) { /* diabaikan */ }
   }
 

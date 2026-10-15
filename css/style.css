@@ -139,6 +139,15 @@ button:focus, input:focus, a:focus, [tabindex]:focus {
 .btn.ghost { background: transparent; }
 .btn.danger { border-color: var(--danger); color: var(--danger); }
 .btn.is-armed { background: var(--danger); border-color: var(--danger); color: #260604; }
+.btn.attention {
+  border-color: var(--accent-2);
+  color: var(--accent-2);
+  animation: attention 1.2s ease-in-out infinite;
+}
+@keyframes attention {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(255, 209, 102, 0); }
+  50% { box-shadow: 0 0 0 6px rgba(255, 209, 102, .3); }
+}
 .btn:disabled { opacity: .45; cursor: not-allowed; }
 .icon-btn {
   font: inherit;
@@ -315,6 +324,9 @@ main { padding: 1.2rem 1.4rem 3rem; }
 }
 
 /* ===== Bantuan ===== */
+.diag { list-style: none; padding: 0; margin: .5rem 0 0; display: grid; gap: .3rem; }
+.diag li { font-size: .92rem; color: var(--muted); }
+.diag li b { color: var(--text); font-weight: 600; }
 .help { display: grid; grid-template-columns: 1fr; gap: 1rem; }
 @media (min-width: 1200px) { .help { grid-template-columns: 1fr 1fr; } }
 .card-help {

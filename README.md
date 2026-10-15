@@ -112,7 +112,7 @@ js/queue.js                Antrean lagu (localStorage)
 js/search.js               Pencarian YouTube Data API + fallback Invidious
 js/player.js               Pemutar YouTube IFrame + kontrol + layar penuh
 js/mic.js                  Mikrofon + echo (Web Audio API)
-js/guide.js               Deteksi dukungan & tautan ke Setelan
+js/guide.js               Deteksi dukungan, panel diagnostik & tautan ke Setelan
 js/app.js                  Pengatur tab, remote, modal, toast
 scripts/apply-env.ps1      Ubah .env menjadi js/config.local.js
 scripts/make-icons.ps1     Buat ulang ikon PNG
@@ -122,6 +122,8 @@ scripts/make-icons.ps1     Buat ulang ikon PNG
 
 - Kuota pencarian gratis 100/hari; fallback Invidious otomatis bila habis atau tanpa key.
 - Lirik tidak ditampilkan aplikasi karena sudah ada di dalam video karaoke (untuk video non-karaoke tidak ada lirik).
+- Video yang menolak diputar di pemutar tersemat (mis. dibatasi pemiliknya) otomatis dilewati, maksimal 5 lagu beruntun. Tombol **Buka di YouTube** membuka lagu itu lewat aplikasi YouTube di TV.
+- Bila browser memblokir autoplay, aplikasi memberi tanda pada tombol **Putar**; tekan sekali untuk mulai.
 - Antrean tersimpan per perangkat (localStorage), bukan tersinkron antar perangkat.
 - Mikrofon bergantung dukungan browser TV; bila tidak didukung, tombol Mic dinonaktifkan otomatis.
 
@@ -133,4 +135,7 @@ scripts/make-icons.ps1     Buat ulang ikon PNG
 | "Kuota API harian habis" | Kuota 100 pencarian habis; aplikasi otomatis pindah ke server cadangan |
 | Lirik tidak muncul | Memang tidak ada panel lirik: lirik berada di dalam gambar video karaoke |
 | Tombol Mic mati | Browser TV tidak mendukung `getUserMedia` atau halaman bukan https/localhost |
+| Video diam setelah dipilih | Kebijakan autoplay browser; tombol **Putar** diberi tanda, tekan sekali |
+| Video tidak bisa diputar di embed | Dibatasi pemilik video; aplikasi melewatinya otomatis, atau tekan **Buka di YouTube** |
+| Aplikasi tidak jalan di STB lama | Browser/WebView terlalu tua (butuh Chromium ± 50+ / Android 7+). Pasang TV Bro versi terbaru; cek tab Bantuan → Diagnostik perangkat |
 | Iklan masih muncul | Iklan dalam pemutar YouTube; lihat bagian 5 |

@@ -74,9 +74,38 @@
     document.body.dataset.playingId = video.id || '';
   }
 
+  function updateYouTubeButton(video) {
+    var btn = $('btn-open-youtube');
+    if (!btn) { return; }
+    if (video && video.id) {
+      btn.setAttribute('data-video-id', video.id);
+      btn.hidden = false;
+    } else {
+      btn.removeAttribute('data-video-id');
+      btn.hidden = true;
+    }
+  }
+
+  function openInYouTube() {
+    var btn = $('btn-open-youtube');
+    var id = btn && btn.getAttribute('data-video-id');
+    if (!id) {
+      toast('Belum ada video yang dipilih.');
+      return;
+    }
+    var url = 'https://www.youtube.com/watch?v=' + encodeURIComponent(id);
+    var opened = window.open(url, '_blank');
+    if (opened) {
+      toast('Membuka YouTube untuk video ini...');
+    } else {
+      toast('Tab baru diblokir. Buka manual: ' + url);
+    }
+  }
+
   function playVideo(video) {
     if (!video) { return; }
     setNowPlaying(video);
+    updateYouTubeButton(video);
     Player.load(video);
     showView('play');
     Player.updateToggleLabel();
@@ -261,6 +290,9 @@
     var startQueue = $('btn-play-queue');
     if (startQueue) { startQueue.addEventListener('click', playFromStart); }
 
+    var youtube = $('btn-open-youtube');
+    if (youtube) { youtube.addEventListener('click', openInYouTube); }
+
     clearBtn = $('btn-clear-queue');
     if (clearBtn) { clearBtn.addEventListener('click', requestClearQueue); }
   }
@@ -275,6 +307,19 @@
   function handlePlayerState(state, code) {
     if (state === 'playing') {
       errorStreak = 0;
+      var playBtn = $('btn-toggle-play');
+      if (playBtn) { playBtn.classList.remove('attention'); }
+      Player.updateToggleLabel();
+      return;
+    }
+
+    if (state === 'blocked') {
+      var toggleBtn = $('btn-toggle-play');
+      if (toggleBtn) {
+        toggleBtn.classList.add('attention');
+        toggleBtn.focus();
+      }
+      toast('Video belum berjalan. Tekan tombol "Putar" sekali untuk memulai.');
       Player.updateToggleLabel();
       return;
     }
@@ -295,7 +340,9 @@
       if (fromQueue && errorStreak >= 5) {
         toast('Beberapa lagu berturut-turut tidak dapat diputar. Antrean dihentikan.');
       } else {
-        toast(label + '.');
+        toast(label + '. Bisa dicoba lewat tombol "Buka di YouTube".');
+        var ytBtn = $('btn-open-youtube');
+        if (ytBtn && !ytBtn.hidden) { ytBtn.focus(); }
       }
       Player.updateToggleLabel();
       return;
