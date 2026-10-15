@@ -1,4 +1,4 @@
-var CACHE_NAME = 'karaoke-tv-v4';
+var CACHE_NAME = 'karaoke-tv-v5';
 var ASSETS = [
   './',
   './index.html',

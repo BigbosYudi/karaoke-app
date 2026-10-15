@@ -288,6 +288,7 @@ main { padding: 1.2rem 1.4rem 3rem; }
 .slider input[type="range"] { width: 8rem; accent-color: var(--accent); }
 
 /* ===== Layar penuh ===== */
+.stage-brand { display: none; }
 #stage:fullscreen {
   display: flex;
   flex-direction: column;
@@ -298,6 +299,20 @@ main { padding: 1.2rem 1.4rem 3rem; }
 }
 #stage:fullscreen .player-wrap { aspect-ratio: auto; flex: 1; min-height: 0; border-radius: 10px; }
 #stage:fullscreen .player-col { height: 100%; }
+#stage:fullscreen .now h2 { font-size: 1.35rem; }
+#stage:fullscreen .stage-brand {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-left: auto;
+  padding-left: 1rem;
+}
+.stage-brand-text {
+  font-size: 1.05rem;
+  font-weight: 800;
+  letter-spacing: .14em;
+  color: var(--muted);
+}
 
 /* ===== Bantuan ===== */
 .help { display: grid; grid-template-columns: 1fr; gap: 1rem; }
