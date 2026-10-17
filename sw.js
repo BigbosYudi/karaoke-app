@@ -1,5 +1,5 @@
 var CACHE_PREFIX = 'karaoke-tv-' + encodeURIComponent(self.registration.scope) + '-';
-var CACHE_NAME = CACHE_PREFIX + 'v8';
+var CACHE_NAME = CACHE_PREFIX + 'v9';
 var ASSETS = [
   './',
   './index.html',

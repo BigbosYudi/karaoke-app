@@ -180,6 +180,8 @@ main { padding: 1.2rem 1.4rem 3rem; }
 
 /* ===== Pencarian ===== */
 .searchbar { display: flex; gap: .7rem; }
+.search-options { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; margin-top: .8rem; }
+#btn-karaoke-mode[aria-pressed="true"] { border-color: var(--ok); color: var(--ok); }
 .searchbar input {
   flex: 1;
   font: inherit;

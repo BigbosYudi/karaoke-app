@@ -37,9 +37,13 @@
 
     <section class="view is-active" id="view-search" role="tabpanel" aria-label="Cari lagu">
       <form class="searchbar" id="search-form" autocomplete="off">
-        <input id="search-input" type="search" placeholder="Cari judul lagu atau artis..." aria-label="Kata kunci pencarian">
+        <input id="search-input" type="search" placeholder="Ketik judul lagu atau penyanyi..." aria-label="Kata kunci pencarian" aria-describedby="search-mode-note">
         <button class="btn primary" type="submit">Cari</button>
       </form>
+      <div class="search-options">
+        <button class="chip" id="btn-karaoke-mode" type="button" aria-pressed="true">Mode Karaoke: aktif</button>
+        <span class="muted" id="search-mode-note">Kata “karaoke” otomatis ditambahkan di depan pencarian.</span>
+      </div>
       <p class="status" id="search-status" role="status">Ketik kata kunci lalu tekan Cari.</p>
       <ul class="cards" id="search-results"></ul>
     </section>

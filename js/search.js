@@ -4,6 +4,7 @@
   var playingHandlers = [];
   var requestSeq = 0;
   var lastQuery = '';
+  var karaokeMode = true;
 
   function setStatus(text, isError) {
     var el = document.getElementById('search-status');
@@ -174,6 +175,20 @@
     init: function () {
       var form = document.getElementById('search-form');
       var list = document.getElementById('search-results');
+      var modeButton = document.getElementById('btn-karaoke-mode');
+      if (modeButton) {
+        modeButton.addEventListener('click', function () {
+          karaokeMode = !karaokeMode;
+          modeButton.setAttribute('aria-pressed', String(karaokeMode));
+          modeButton.textContent = karaokeMode ? 'Mode Karaoke: aktif' : 'Mode Karaoke: mati';
+          var note = document.getElementById('search-mode-note');
+          if (note) {
+            note.textContent = karaokeMode
+              ? 'Kata “karaoke” otomatis ditambahkan di depan pencarian.'
+              : 'Pencarian biasa, sesuai kata yang Anda ketik.';
+          }
+        });
+      }
       if (form) {
         form.addEventListener('submit', function (e) {
           e.preventDefault();
@@ -188,6 +203,11 @@
       if (!q) {
         setStatus('Masukkan kata kunci terlebih dahulu.', true);
         return Promise.resolve([]);
+      }
+      if (karaokeMode) {
+        // Pindahkan kata yang sudah ada ke depan, tanpa menggandakannya.
+        q = Utils.cleanText(q.replace(/\bkaraoke\b/gi, ' '));
+        q = 'karaoke' + (q ? ' ' + q : '');
       }
       var token = ++requestSeq;
       lastQuery = q;

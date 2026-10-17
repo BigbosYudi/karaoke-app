@@ -93,6 +93,25 @@ test('Fallback pencarian menampilkan sumber sebenarnya', async () => {
   });
   await c.Search.run('lagu'); assert.match(status.textContent, /server cadangan/);
 });
+test('Mode Karaoke menempatkan kata di depan tanpa duplikasi dan bisa dimatikan', async () => {
+  const urls = [], mode = { setAttribute() {}, addEventListener(k, fn) { this.click = fn; } };
+  const elements = { 'btn-karaoke-mode': mode, 'search-mode-note': {}, 'search-status': { style: {} }, 'search-results': { addEventListener() {} } };
+  const c = run('js/search.js', {
+    AppConfig: { hasKey() { return false; }, invidiousInstances: ['https://example.invalid'] },
+    Utils: { cleanText: s => String(s).replace(/\s+/g, ' ').trim() },
+    document: { getElementById(id) { return elements[id] || null; } }, setTimeout, clearTimeout,
+    fetch: async url => { urls.push(new URL(url).searchParams.get('q')); return { ok: true, json: async () => [] }; }
+  });
+  c.Search.init();
+  for (const input of ['Dewa Kangen', 'Dewa Kangen karaoke', 'KARAOKE Dewa Kangen', 'karaoke Dewa karaoke Kangen']) {
+    await c.Search.run(input); assert.equal(urls.at(-1), 'karaoke Dewa Kangen');
+  }
+  const count = urls.length;
+  await c.Search.run('   '); assert.equal(urls.length, count);
+  await c.Search.run('karaoke'); assert.equal(urls.at(-1), 'karaoke');
+  mode.click(); await c.Search.run('Dewa Kangen'); assert.equal(urls.at(-1), 'Dewa Kangen');
+  mode.click(); await c.Search.run('Dewa Kangen'); assert.equal(urls.at(-1), 'karaoke Dewa Kangen');
+});
 test('Service worker terisolasi dan tidak menangani file rahasia', async () => {
   const handlers = {}, deleted = [];
   const c = run('sw.js', {
