@@ -94,7 +94,7 @@ test('Fallback pencarian menampilkan sumber sebenarnya', async () => {
   await c.Search.run('lagu'); assert.match(status.textContent, /server cadangan/);
 });
 test('Mode Karaoke menempatkan kata di depan tanpa duplikasi dan bisa dimatikan', async () => {
-  const urls = [], mode = { setAttribute() {}, addEventListener(k, fn) { this.click = fn; } };
+  const urls = [], mode = { attributes: {}, setAttribute(k, v) { this.attributes[k] = v; }, addEventListener(k, fn) { this.click = fn; } };
   const elements = { 'btn-karaoke-mode': mode, 'search-mode-note': {}, 'search-status': { style: {} }, 'search-results': { addEventListener() {} } };
   const c = run('js/search.js', {
     AppConfig: { hasKey() { return false; }, invidiousInstances: ['https://example.invalid'] },
@@ -109,8 +109,27 @@ test('Mode Karaoke menempatkan kata di depan tanpa duplikasi dan bisa dimatikan'
   const count = urls.length;
   await c.Search.run('   '); assert.equal(urls.length, count);
   await c.Search.run('karaoke'); assert.equal(urls.at(-1), 'karaoke');
-  mode.click(); await c.Search.run('Dewa Kangen'); assert.equal(urls.at(-1), 'Dewa Kangen');
-  mode.click(); await c.Search.run('Dewa Kangen'); assert.equal(urls.at(-1), 'karaoke Dewa Kangen');
+  mode.click(); assert.equal(mode.attributes['aria-checked'], 'false');
+  await c.Search.run('Dewa Kangen'); assert.equal(urls.at(-1), 'Dewa Kangen');
+  mode.click(); assert.equal(mode.attributes['aria-checked'], 'true');
+  await c.Search.run('Dewa Kangen'); assert.equal(urls.at(-1), 'karaoke Dewa Kangen');
+});
+test('Mengganti mode membatalkan hasil pencarian lama tanpa memakai kuota baru', async () => {
+  let complete, requests = 0;
+  const mode = { setAttribute() {}, addEventListener(k, fn) { this.click = fn; } };
+  const status = { style: {} }, list = { addEventListener() {} }, label = {};
+  const elements = { 'btn-karaoke-mode': mode, 'karaoke-mode-state': label, 'search-status': status, 'search-results': list };
+  const c = run('js/search.js', {
+    AppConfig: { hasKey() { return false; }, invidiousInstances: ['https://example.invalid'] },
+    Utils: { cleanText: s => String(s).replace(/\s+/g, ' ').trim() },
+    document: { getElementById(id) { return elements[id] || null; } }, setTimeout, clearTimeout,
+    fetch() { requests++; return new Promise(resolve => { complete = resolve; }); }
+  });
+  c.Search.init();
+  const pending = c.Search.run('cinta kita'); mode.click();
+  complete({ ok: true, json: async () => [] }); await pending;
+  assert.equal(requests, 1); assert.equal(label.textContent, 'OFF');
+  assert.match(status.textContent, /Mode Karaoke OFF/); assert.equal(list.innerHTML, '');
 });
 test('Service worker terisolasi dan tidak menangani file rahasia', async () => {
   const handlers = {}, deleted = [];
@@ -123,7 +142,11 @@ test('Service worker terisolasi dan tidak menangani file rahasia', async () => {
   for (const suffix of ['.env', 'js/config.local.js', 'index.html?key=secret', 'unknown.js']) {
     handlers.fetch({ request: { method: 'GET', url: 'https://example.test/karaoke/' + suffix }, respondWith() { assert.fail('Must not intercept ' + suffix); } });
   }
-  for (const asset of c.ASSETS) assert.ok(fs.existsSync(path.join(ROOT, asset)), asset);
+  for (const asset of c.ASSETS) assert.ok(fs.existsSync(path.join(ROOT, asset.split('?')[0])), asset);
+  const html = fs.readFileSync(path.join(ROOT, 'index.html'), 'utf8');
+  for (const match of html.matchAll(/(?:src|href)="((?:js|css)\/[^"?]+\?v=[^"]+)"/g)) {
+    assert.ok(c.ASSETS.includes('./' + match[1]), 'Versi HTML dan cache harus sama: ' + match[1]);
+  }
 });
 test('Permintaan mikrofon terlambat dihentikan setelah dibatalkan', async () => {
   let resolve, stopped = 0;

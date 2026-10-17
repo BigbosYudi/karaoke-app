@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#0b0b12">
-<link rel="stylesheet" href="css/style.css">
+<link rel="stylesheet" href="css/style.css?v=20261017-2">
 </head>
 <body>
 <div id="app">
@@ -37,13 +37,12 @@
 
     <section class="view is-active" id="view-search" role="tabpanel" aria-label="Cari lagu">
       <form class="searchbar" id="search-form" autocomplete="off">
-        <input id="search-input" type="search" placeholder="Ketik judul lagu atau penyanyi..." aria-label="Kata kunci pencarian" aria-describedby="search-mode-note">
+        <input id="search-input" type="search" placeholder="Ketik judul lagu atau penyanyi..." aria-label="Kata kunci pencarian">
+        <button class="karaoke-switch" id="btn-karaoke-mode" type="button" role="switch" aria-checked="true" aria-label="Mode Karaoke" title="Tambahkan kata karaoke di depan pencarian">
+          <span>Karaoke</span><span class="switch-track" aria-hidden="true"><span class="switch-knob"></span></span><span class="switch-state" id="karaoke-mode-state" aria-hidden="true">ON</span>
+        </button>
         <button class="btn primary" type="submit">Cari</button>
       </form>
-      <div class="search-options">
-        <button class="chip" id="btn-karaoke-mode" type="button" aria-pressed="true">Mode Karaoke: aktif</button>
-        <span class="muted" id="search-mode-note">Kata “karaoke” otomatis ditambahkan di depan pencarian.</span>
-      </div>
       <p class="status" id="search-status" role="status">Ketik kata kunci lalu tekan Cari.</p>
       <ul class="cards" id="search-results"></ul>
     </section>
@@ -192,12 +191,12 @@
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="js/config.local.js" onerror="void 0"></script>
-<script src="js/config.js"></script>
-<script src="js/queue.js"></script>
-<script src="js/search.js"></script>
-<script src="js/player.js"></script>
-<script src="js/mic.js"></script>
-<script src="js/guide.js"></script>
-<script src="js/app.js"></script>
+<script src="js/config.js?v=20261017-2"></script>
+<script src="js/queue.js?v=20261017-2"></script>
+<script src="js/search.js?v=20261017-2"></script>
+<script src="js/player.js?v=20261017-2"></script>
+<script src="js/mic.js?v=20261017-2"></script>
+<script src="js/guide.js?v=20261017-2"></script>
+<script src="js/app.js?v=20261017-2"></script>
 </body>
 </html>

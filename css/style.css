@@ -180,8 +180,17 @@ main { padding: 1.2rem 1.4rem 3rem; }
 
 /* ===== Pencarian ===== */
 .searchbar { display: flex; gap: .7rem; }
-.search-options { display: flex; align-items: center; flex-wrap: wrap; gap: .7rem; margin-top: .8rem; }
-#btn-karaoke-mode[aria-pressed="true"] { border-color: var(--ok); color: var(--ok); }
+.karaoke-switch { display: inline-flex; align-self: center; align-items: center; justify-content: center; gap: .5rem; flex: none; min-height: 44px; padding: .5rem .6rem; font: inherit; font-size: .82rem; color: var(--muted); background: transparent; border: 1px solid var(--line); border-radius: 10px; cursor: pointer; }
+.switch-track { display: inline-flex; align-items: center; width: 2rem; height: 1.15rem; padding: .15rem; box-sizing: border-box; background: var(--line); border-radius: 999px; }
+.switch-knob { display: block; width: .85rem; height: .85rem; border-radius: 50%; background: var(--text); transition: transform .15s; }
+.karaoke-switch[aria-checked="true"] .switch-track { background: var(--ok); }
+.karaoke-switch[aria-checked="true"] .switch-knob { background: #0b0b12; transform: translateX(.85rem); }
+.switch-state { min-width: 2.2em; font-size: .7rem; font-weight: 700; }
+@media (max-width: 540px) {
+  .searchbar { flex-wrap: wrap; }
+  .searchbar input { flex-basis: 100%; min-width: 0; }
+  .karaoke-switch { margin-left: auto; }
+}
 .searchbar input {
   flex: 1;
   font: inherit;

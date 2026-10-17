@@ -1,17 +1,17 @@
 var CACHE_PREFIX = 'karaoke-tv-' + encodeURIComponent(self.registration.scope) + '-';
-var CACHE_NAME = CACHE_PREFIX + 'v9';
+var CACHE_NAME = CACHE_PREFIX + 'v10';
 var ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './css/style.css',
-  './js/config.js',
-  './js/queue.js',
-  './js/search.js',
-  './js/player.js',
-  './js/mic.js',
-  './js/guide.js',
-  './js/app.js',
+  './css/style.css?v=20261017-2',
+  './js/config.js?v=20261017-2',
+  './js/queue.js?v=20261017-2',
+  './js/search.js?v=20261017-2',
+  './js/player.js?v=20261017-2',
+  './js/mic.js?v=20261017-2',
+  './js/guide.js?v=20261017-2',
+  './js/app.js?v=20261017-2',
   './icons/logo-96.png',
   './icons/logo-512.png',
   './icons/icon-192.png',
@@ -51,11 +51,11 @@ self.addEventListener('fetch', function (event) {
 
   // Konfigurasi lokal (API key) harus selalu diambil dari jaringan agar perubahan langsung berlaku.
   if (url.pathname.indexOf('config.local.js') !== -1 || /\/\./.test(url.pathname)) { return; }
-  if (url.search || !ASSETS.some(function (asset) { return new URL(asset, self.registration.scope).pathname === url.pathname; })) { return; }
+  if (!ASSETS.some(function (asset) { return new URL(asset, self.registration.scope).href === url.href; })) { return; }
 
   // Utamakan jaringan agar pembaruan aplikasi langsung terpakai; cache hanya untuk keadaan offline.
   event.respondWith(
-    fetch(request).then(function (response) {
+    fetch(request, { cache: 'no-cache' }).then(function (response) {
       if (response && response.ok) {
         var copy = response.clone();
         event.waitUntil(caches.open(CACHE_NAME).then(function (cache) { return cache.put(request, copy); }).catch(function () {}));

@@ -179,14 +179,14 @@
       if (modeButton) {
         modeButton.addEventListener('click', function () {
           karaokeMode = !karaokeMode;
-          modeButton.setAttribute('aria-pressed', String(karaokeMode));
-          modeButton.textContent = karaokeMode ? 'Mode Karaoke: aktif' : 'Mode Karaoke: mati';
-          var note = document.getElementById('search-mode-note');
-          if (note) {
-            note.textContent = karaokeMode
-              ? 'Kata “karaoke” otomatis ditambahkan di depan pencarian.'
-              : 'Pencarian biasa, sesuai kata yang Anda ketik.';
-          }
+          modeButton.setAttribute('aria-checked', String(karaokeMode));
+          var label = document.getElementById('karaoke-mode-state');
+          if (label) { label.textContent = karaokeMode ? 'ON' : 'OFF'; }
+          // Hasil dan permintaan mode lama tidak boleh muncul sebagai hasil mode baru.
+          requestSeq += 1;
+          cache = {};
+          renderResults([]);
+          setStatus(karaokeMode ? 'Mode Karaoke ON. Tekan Cari untuk mencari versi karaoke.' : 'Mode Karaoke OFF. Tekan Cari untuk pencarian biasa.');
         });
       }
       if (form) {
@@ -235,7 +235,7 @@
         renderResults(results);
         var source = usedApi ? 'YouTube API' : 'server cadangan (tanpa key)';
         setStatus(results.length
-          ? results.length + ' hasil dari ' + source + '.'
+          ? results.length + ' hasil untuk “' + q + '” dari ' + source + '.'
           : 'Tidak ada hasil untuk "' + q + '".');
         return results;
       }).catch(function (err) {
