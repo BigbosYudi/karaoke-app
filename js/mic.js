@@ -10,9 +10,10 @@
   var wetGain = null;
   var running = false;
   var starting = false;
+  var generation = 0;
 
   function isSupported() {
-    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext;
+    return !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext && !!(window.AudioContext || window.webkitAudioContext);
   }
 
   function setButton(text) {
@@ -43,6 +44,7 @@
       }
       return Promise.resolve(false);
     }
+    var attempt = ++generation;
     starting = true;
     setButton('Mic: menyalakan...');
     return navigator.mediaDevices.getUserMedia({
@@ -52,6 +54,11 @@
         autoGainControl: false
       }
     }).then(function (mediaStream) {
+      if (attempt !== generation || document.hidden) {
+        mediaStream.getTracks().forEach(function (t) { t.stop(); });
+        if (attempt === generation) { starting = false; setButton('Mic: mati'); }
+        return false;
+      }
       stream = mediaStream;
       var AudioCtx = window.AudioContext || window.webkitAudioContext;
       ctx = new AudioCtx();
@@ -70,14 +77,18 @@
       delay.connect(wetGain).connect(ctx.destination);
 
       applyEcho();
-      starting = false;
-      running = true;
-      setButton('Mic: hidup');
-      if (window.App && App.toast) {
-        App.toast('Mikrofon aktif. Gunakan headset agar tidak terjadi umpan balik.');
-      }
-      return true;
+      return Promise.resolve(ctx.resume ? ctx.resume() : undefined).then(function () {
+        if (attempt !== generation) { return false; }
+        starting = false;
+        running = true;
+        setButton('Mic: hidup');
+        if (window.App && App.toast) {
+          App.toast('Mikrofon aktif. Gunakan headset agar tidak terjadi umpan balik.');
+        }
+        return true;
+      });
     }).catch(function (err) {
+      if (attempt !== generation) { return false; }
       starting = false;
       running = false;
       // Jangan tinggalkan track mikrofon tetap terbuka bila rangkaian audio gagal dibuat.
@@ -99,6 +110,7 @@
   }
 
   function stop() {
+    generation += 1;
     try {
       if (stream) { stream.getTracks().forEach(function (t) { t.stop(); }); }
       if (ctx) { ctx.close(); }
@@ -150,6 +162,7 @@
       describeSupport();
     },
     toggle: toggle,
+    stop: stop,
     isRunning: function () { return running; }
   };
 })();

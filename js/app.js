@@ -9,6 +9,8 @@
   var clearArmed = false;
   var clearTimer = null;
   var errorStreak = 0;
+  var queuePlayback = false;
+  var settingsOpener = null;
 
   function $(id) { return document.getElementById(id); }
 
@@ -103,8 +105,9 @@
     }
   }
 
-  function playVideo(video) {
+  function playVideo(video, fromQueue) {
     if (!video) { return; }
+    queuePlayback = !!fromQueue;
     setNowPlaying(video);
     updateYouTubeButton(video);
     Player.load(video);
@@ -119,7 +122,7 @@
       return;
     }
     Queue.setCurrent(index);
-    playVideo(item);
+    playVideo(item, true);
   }
 
   function playFromStart() {
@@ -176,13 +179,17 @@
     if (!modal) { return; }
     var input = $('api-key-input');
     if (input) { input.value = AppConfig.youtubeApiKey || ''; }
+    settingsOpener = document.activeElement;
     modal.hidden = false;
+    $('app').setAttribute('inert', '');
     if (input) { input.focus(); }
   }
 
   function closeSettings() {
     var modal = $('settings-modal');
     if (modal) { modal.hidden = true; }
+    $('app').removeAttribute('inert');
+    if (settingsOpener && document.contains(settingsOpener)) { settingsOpener.focus(); }
   }
 
   function saveKey() {
@@ -200,6 +207,13 @@
 
   function handleGlobalKeys(event) {
     var key = event.key;
+    if (isModalOpen() && key === 'Tab') {
+      var fields = focusable($('settings-modal'));
+      var pos = fields.indexOf(document.activeElement);
+      var nextPos = (pos + (event.shiftKey ? -1 : 1) + fields.length) % fields.length;
+      if (fields[nextPos]) { fields[nextPos].focus(); event.preventDefault(); }
+      return;
+    }
 
     if (key === 'Escape') {
       if (isModalOpen()) {
@@ -214,6 +228,7 @@
         saveKey();
         event.preventDefault();
       }
+      if (/^Arrow/.test(key)) { moveFocus(event, $('settings-modal')); }
       return;
     }
 
@@ -236,13 +251,44 @@
         var next = (idx + delta + tabs.length) % tabs.length;
         tabs[next].focus();
         showView(tabs[next].getAttribute('data-view'));
+        tabs[next].focus();
         event.preventDefault();
+        return;
       }
     }
+    moveFocus(event, $('app'));
+  }
+
+  function focusable(root) {
+    return Array.prototype.slice.call(root.querySelectorAll('button, input, a[href], [tabindex]')).filter(function (el) {
+      return !el.disabled && el.tabIndex !== -1 && el.getClientRects().length && !el.closest('[hidden]');
+    });
+  }
+
+  function moveFocus(event, root) {
+    var active = document.activeElement;
+    if (!active || !/^Arrow(Left|Right|Up|Down)$/.test(event.key)) { return; }
+    if ((active.tagName === 'INPUT' || active.tagName === 'TEXTAREA') && /Left|Right/.test(event.key)) { return; }
+    var rect = active.getBoundingClientRect();
+    var x = rect.left + rect.width / 2, y = rect.top + rect.height / 2;
+    var horizontal = /Left|Right/.test(event.key);
+    var sign = /Right|Down/.test(event.key) ? 1 : -1;
+    var best = null, bestScore = Infinity;
+    focusable(root).forEach(function (el) {
+      if (el === active) { return; }
+      var r = el.getBoundingClientRect();
+      var dx = r.left + r.width / 2 - x, dy = r.top + r.height / 2 - y;
+      var forward = (horizontal ? dx : dy) * sign;
+      if (forward <= 1) { return; }
+      var side = Math.abs(horizontal ? dy : dx);
+      var score = forward + side * 3;
+      if (score < bestScore) { best = el; bestScore = score; }
+    });
+    if (best) { best.focus(); event.preventDefault(); }
   }
 
   function bindControls() {
-    document.querySelectorAll('.tab').forEach(function (tab) {
+    Array.prototype.forEach.call(document.querySelectorAll('.tab'), function (tab) {
       tab.addEventListener('click', function () {
         showView(tab.getAttribute('data-view'));
       });
@@ -327,9 +373,7 @@
 
     if (state === 'error') {
       var label = errorLabel(code);
-      var current = Queue.current();
-      var playingId = document.body.dataset.playingId || '';
-      var fromQueue = !!(current && current.id === playingId);
+      var fromQueue = queuePlayback;
       var next = Queue.nextIndex();
 
       if (fromQueue && next >= 0 && errorStreak < 5) {
@@ -351,9 +395,9 @@
 
     if (state === 'ended') {
       errorStreak = 0;
-      var idx = Queue.nextIndex();
+      var idx = queuePlayback ? Queue.nextIndex() : -1;
       if (idx >= 0) { playIndex(idx); return; }
-      toast('Antrean selesai.');
+      toast(queuePlayback ? 'Antrean selesai.' : 'Lagu selesai.');
     }
     Player.updateToggleLabel();
   }
@@ -367,6 +411,7 @@
     Queue.onRequestPlay(function (index) { playIndex(index); });
 
     Queue.onChange(function () {
+      if (!Queue.length()) { queuePlayback = false; }
       Queue.render();
     });
 
@@ -384,6 +429,7 @@
     // Jangan biarkan audio terus berbunyi saat aplikasi ditinggalkan (mis. pindah ke aplikasi YouTube).
     document.addEventListener('visibilitychange', function () {
       if (document.hidden && Player.isPlaying()) { Player.toggle(); }
+      if (document.hidden && window.Mic) { Mic.stop(); }
     });
   }
 

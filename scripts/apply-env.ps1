@@ -1,6 +1,6 @@
 <#
   Membaca .env di root proyek lalu menghasilkan js/config.local.js
-  sehingga API key ikut terpakai saat aplikasi di-deploy.
+  untuk pemakaian lokal (file hasil tidak di-commit/deploy).
 
   Pakai:  powershell -ExecutionPolicy Bypass -File scripts\apply-env.ps1
 #>

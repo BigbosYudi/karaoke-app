@@ -7,6 +7,7 @@
   var loadedVideoId = '';
   var apiLoading = false;
   var apiQueue = [];
+  var apiTimer = null;
   var pendingVideo = null;
   var pollTimer = null;
   var autoplayTimer = null;
@@ -22,6 +23,7 @@
 
     var previous = window.onYouTubeIframeAPIReady;
     window.onYouTubeIframeAPIReady = function () {
+      clearTimeout(apiTimer);
       if (typeof previous === 'function') { previous(); }
       apiQueue.forEach(function (fn) { fn(); });
       apiQueue = [];
@@ -31,12 +33,16 @@
     tag.src = 'https://www.youtube.com/iframe_api';
     tag.async = true;
     tag.onerror = function () {
+      clearTimeout(apiTimer);
+      creating = false;
+      showPlaceholder();
       apiQueue = [];
       apiLoading = false;
       if (window.App && App.toast) {
         App.toast('Gagal memuat pemutar YouTube. Periksa koneksi internet TV.');
       }
     };
+    apiTimer = setTimeout(tag.onerror, 15000);
     document.head.appendChild(tag);
   }
 
@@ -147,7 +153,7 @@
     if (player) {
       if (!ready) { return; }
       if (video.id === loadedVideoId) {
-        try { player.playVideo(); } catch (e) { /* diabaikan */ }
+        try { player.seekTo(0, true); player.playVideo(); } catch (e) { /* diabaikan */ }
         startPolling();
         watchAutoplay();
         return;
@@ -192,16 +198,24 @@
     return document.fullscreenElement || document.webkitFullscreenElement || null;
   }
 
+  function fullscreenResult(result) {
+    if (result && typeof result.catch === 'function') {
+      result.catch(function () {
+        if (window.App && App.toast) { App.toast('Browser tidak mengizinkan layar penuh.'); }
+      });
+    }
+  }
+
   function toggleFullscreen() {
     var stage = document.getElementById('stage');
     if (!stage) { return; }
     if (fullscreenElement()) {
-      if (document.exitFullscreen) { document.exitFullscreen(); }
-      else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+      if (document.exitFullscreen) { fullscreenResult(document.exitFullscreen()); }
+      else if (document.webkitExitFullscreen) { fullscreenResult(document.webkitExitFullscreen()); }
       return;
     }
-    if (stage.requestFullscreen) { stage.requestFullscreen(); }
-    else if (stage.webkitRequestFullscreen) { stage.webkitRequestFullscreen(); }
+    if (stage.requestFullscreen) { fullscreenResult(stage.requestFullscreen()); }
+    else if (stage.webkitRequestFullscreen) { fullscreenResult(stage.webkitRequestFullscreen()); }
   }
 
   function updateFullscreenLabel() {

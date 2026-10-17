@@ -58,6 +58,10 @@ try {
 echo $token
 "@ | Set-Content -LiteralPath $askPass -Encoding ASCII
 
+  $savedEnv = @{}
+  foreach ($name in @('GIT_ASKPASS', 'GIT_TERMINAL_PROMPT', 'GIT_CONFIG_COUNT', 'GIT_CONFIG_KEY_0', 'GIT_CONFIG_VALUE_0')) {
+    $savedEnv[$name] = [Environment]::GetEnvironmentVariable($name, 'Process')
+  }
   $env:GIT_ASKPASS = $askPass
   $env:GIT_TERMINAL_PROMPT = '0'
   $env:GIT_CONFIG_COUNT = '1'
@@ -67,17 +71,16 @@ echo $token
   try {
     $oldPref = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
-    git push -u origin $branch 2>&1 | ForEach-Object { Write-Host $_ }
+    git -c credential.helper= push -u origin $branch 2>&1 | ForEach-Object { Write-Host $_ }
     $pushCode = $LASTEXITCODE
     $ErrorActionPreference = $oldPref
     if ($pushCode -ne 0) { throw "git push gagal (kode $pushCode). Periksa nama repo dan izin token (Contents: Read and write)." }
     Write-Host "Push berhasil." -ForegroundColor Green
   } finally {
     Remove-Item -LiteralPath $askPass -Force -ErrorAction SilentlyContinue
-    Remove-Item Env:GIT_ASKPASS -ErrorAction SilentlyContinue
-    Remove-Item Env:GIT_CONFIG_COUNT -ErrorAction SilentlyContinue
-    Remove-Item Env:GIT_CONFIG_KEY_0 -ErrorAction SilentlyContinue
-    Remove-Item Env:GIT_CONFIG_VALUE_0 -ErrorAction SilentlyContinue
+    foreach ($name in $savedEnv.Keys) {
+      [Environment]::SetEnvironmentVariable($name, $savedEnv[$name], 'Process')
+    }
   }
 
   # Cek dulu apakah GitHub Pages sudah aktif.

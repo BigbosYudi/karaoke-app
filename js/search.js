@@ -203,6 +203,7 @@
                 ? 'Kuota API harian habis. Beralih ke server cadangan...'
                 : 'API YouTube gagal (' + err.message + '). Beralih ke server cadangan...', true);
             }
+            usedApi = false;
             return viaInvidious(q);
           })
         : viaInvidious(q);

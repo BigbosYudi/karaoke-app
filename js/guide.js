@@ -1,12 +1,16 @@
 (function () {
   'use strict';
 
+  function storageAvailable() {
+    try { localStorage.setItem('karaoke.probe', '1'); localStorage.removeItem('karaoke.probe'); return true; } catch (e) { return false; }
+  }
+
   function appendBookmarkHint() {
     var card = document.querySelector('#view-help .card-help');
     if (!card || card.querySelector('.bookmark-hint')) { return; }
     var p = document.createElement('p');
     p.className = 'muted bookmark-hint';
-    p.innerHTML = 'Alamat halaman ini: <code>' + Utils.escapeHtml(window.location.href) + '</code>';
+    p.innerHTML = 'Alamat halaman ini: <code>' + Utils.escapeHtml((window.location.origin + window.location.pathname)) + '</code>';
     card.appendChild(p);
   }
 
@@ -19,7 +23,7 @@
     notes.push('Pemutar tersemat: ' + (window.location.protocol === 'file:' ? 'perlu http/https' : 'siap'));
     notes.push('Mikrofon: ' + ((navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext) ? 'didukung' : 'tidak didukung'));
     notes.push('Layar penuh: ' + (document.fullscreenEnabled || document.webkitFullscreenEnabled ? 'didukung' : 'tidak didukung'));
-    notes.push('Penyimpanan antrean: ' + (typeof localStorage !== 'undefined' ? 'aktif' : 'tidak aktif'));
+    notes.push('Penyimpanan antrean: ' + (storageAvailable() ? 'aktif' : 'tidak aktif'));
 
     var p = document.createElement('p');
     p.className = 'muted support-note';
@@ -99,7 +103,7 @@
     rows.push(['Service worker', yes('serviceWorker' in navigator)]);
     rows.push(['Layar penuh', yes(!!(document.fullscreenEnabled || document.webkitFullscreenEnabled))]);
     rows.push(['Mikrofon (getUserMedia)', yes(!!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.isSecureContext))]);
-    rows.push(['Penyimpanan antrean', yes(typeof localStorage !== 'undefined')]);
+    rows.push(['Penyimpanan antrean', yes(storageAvailable())]);
     rows.push(['Sumber pencarian', window.AppConfig && AppConfig.youtubeApiKey ? 'YouTube Data API' : 'server cadangan (tanpa key)']);
     rows.push(['Koneksi', navigator.onLine === false ? 'offline' : 'online']);
     return rows;

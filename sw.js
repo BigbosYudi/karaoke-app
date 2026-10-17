@@ -1,4 +1,5 @@
-var CACHE_NAME = 'karaoke-tv-v6';
+var CACHE_PREFIX = 'karaoke-tv-' + encodeURIComponent(self.registration.scope) + '-';
+var CACHE_NAME = CACHE_PREFIX + 'v8';
 var ASSETS = [
   './',
   './index.html',
@@ -24,7 +25,7 @@ var ASSETS = [
 self.addEventListener('install', function (event) {
   event.waitUntil(
     caches.open(CACHE_NAME).then(function (cache) {
-      return cache.addAll(ASSETS).catch(function () { /* sebagian aset opsional */ });
+      return cache.addAll(ASSETS);
     }).then(function () { return self.skipWaiting(); })
   );
 });
@@ -33,7 +34,7 @@ self.addEventListener('activate', function (event) {
   event.waitUntil(
     caches.keys().then(function (keys) {
       return Promise.all(keys.filter(function (key) {
-        return key !== CACHE_NAME;
+        return key.indexOf(CACHE_PREFIX) === 0 && key !== CACHE_NAME;
       }).map(function (key) {
         return caches.delete(key);
       }));
@@ -49,19 +50,20 @@ self.addEventListener('fetch', function (event) {
   if (url.origin !== self.location.origin) { return; }
 
   // Konfigurasi lokal (API key) harus selalu diambil dari jaringan agar perubahan langsung berlaku.
-  if (url.pathname.indexOf('config.local.js') !== -1) { return; }
+  if (url.pathname.indexOf('config.local.js') !== -1 || /\/\./.test(url.pathname)) { return; }
+  if (url.search || !ASSETS.some(function (asset) { return new URL(asset, self.registration.scope).pathname === url.pathname; })) { return; }
 
   // Utamakan jaringan agar pembaruan aplikasi langsung terpakai; cache hanya untuk keadaan offline.
   event.respondWith(
     fetch(request).then(function (response) {
       if (response && response.ok) {
         var copy = response.clone();
-        caches.open(CACHE_NAME).then(function (cache) { cache.put(request, copy); });
+        event.waitUntil(caches.open(CACHE_NAME).then(function (cache) { return cache.put(request, copy); }).catch(function () {}));
       }
       return response;
     }).catch(function () {
       return caches.match(request).then(function (cached) {
-        return cached || caches.match('./index.html');
+        return cached || (request.mode === 'navigate' ? caches.match('./index.html') : Response.error());
       });
     })
   );

@@ -25,7 +25,17 @@
     try { localStorage.removeItem(key); } catch (e) { /* diabaikan */ }
   }
 
-  var stored = readUrlKey() || storageGet(LS_KEY) || env.youtubeApiKey || '';
+  var urlKey = readUrlKey();
+  var stored = urlKey || storageGet(LS_KEY) || (storageGet(LS_KEY + '.disabled') ? '' : env.youtubeApiKey) || '';
+  if (urlKey) {
+    storageSet(LS_KEY, urlKey);
+    storageRemove(LS_KEY + '.disabled');
+    try {
+      var cleanUrl = new URL(window.location.href);
+      cleanUrl.searchParams.delete('key');
+      window.history.replaceState(null, '', cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+    } catch (e) { /* browser lama */ }
+  }
 
   window.AppConfig = {
     youtubeApiKey: stored,
@@ -44,8 +54,10 @@
       this.youtubeApiKey = (key || '').trim();
       if (this.youtubeApiKey) {
         storageSet(LS_KEY, this.youtubeApiKey);
+        storageRemove(LS_KEY + '.disabled');
       } else {
         storageRemove(LS_KEY);
+        storageSet(LS_KEY + '.disabled', '1');
       }
       document.dispatchEvent(new CustomEvent('appkeychange'));
     },

@@ -18,17 +18,30 @@ const MIME = {
 };
 
 const server = http.createServer((req, res) => {
-  const urlPath = decodeURIComponent(req.url.split('?')[0]);
-  let rel = urlPath.replace(/^\/+/, '') || 'index.html';
-
-  if (rel.endsWith('/')) { rel += 'index.html'; }
-
-  const file = path.join(ROOT, rel);
-  if (!file.startsWith(ROOT)) {
-    res.writeHead(403);
-    res.end('403');
-    return;
+  if (req.method !== 'GET' && req.method !== 'HEAD') {
+    res.writeHead(405, { Allow: 'GET, HEAD' }); res.end(); return;
   }
+  let urlPath;
+  try { urlPath = decodeURIComponent(req.url.split('?')[0]); }
+  catch (err) { res.writeHead(400); res.end('Bad Request'); return; }
+  // Hanya aset publik aplikasi; jangan pernah sajikan .env, Git, atau skrip internal.
+  const rel = urlPath.replace(/^\/+/, '') || 'index.html';
+  const parts = rel.split(/[\\/]/);
+  const allowed = ['index.html', 'manifest.webmanifest', 'sw.js'].includes(rel) ||
+    (/^(css|js|icons)\//.test(rel) && /\.(js|css|png|svg|ico)$/.test(rel));
+  const file = path.resolve(ROOT, rel);
+  const relative = path.relative(ROOT, file);
+  if (!allowed || parts.some(p => p.startsWith('.') || p.includes(':')) ||
+      relative.startsWith('..') || path.isAbsolute(relative) || rel.includes('\0')) {
+    res.writeHead(403); res.end('Forbidden'); return;
+  }
+  // realpath juga menolak symlink yang mengarah keluar projek.
+  try {
+    const real = path.relative(fs.realpathSync(ROOT), fs.realpathSync(file));
+    if (real.startsWith('..') || path.isAbsolute(real)) {
+      res.writeHead(403); res.end('Forbidden'); return;
+    }
+  } catch (err) { res.writeHead(404); res.end('Not Found'); return; }
 
   fs.readFile(file, (err, data) => {
     if (err) {
@@ -38,9 +51,11 @@ const server = http.createServer((req, res) => {
     }
     res.writeHead(200, {
       'Content-Type': MIME[path.extname(file).toLowerCase()] || 'application/octet-stream',
-      'Cache-Control': 'no-store'
+      'Cache-Control': 'no-store',
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'strict-origin-when-cross-origin'
     });
-    res.end(data);
+    res.end(req.method === 'HEAD' ? undefined : data);
   });
 });
 

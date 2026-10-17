@@ -17,8 +17,12 @@
     } catch (e) {
       items = [];
     }
-    var idx = parseInt(localStorage.getItem(LS_INDEX), 10);
-    currentIndex = isNaN(idx) ? -1 : idx;
+    items = items.filter(function (item) {
+      return item && typeof item.id === 'string' && /^[A-Za-z0-9_-]{11}$/.test(item.id) && typeof item.title === 'string';
+    });
+    var idx = -1;
+    try { idx = parseInt(localStorage.getItem(LS_INDEX), 10); } catch (e) { /* sesi tanpa penyimpanan */ }
+    currentIndex = idx >= 0 && idx < items.length ? idx : -1;
   }
 
   function save() {
@@ -76,9 +80,12 @@
       playHandlers.forEach(function (fn) { fn(index); });
       return;
     }
-    if (act === 'remove') { Queue.remove(index); }
-    if (act === 'up') { Queue.move(index, -1); }
-    if (act === 'down') { Queue.move(index, 1); }
+    var targetIndex = index;
+    if (act === 'remove') { Queue.remove(index); targetIndex = Math.min(index, items.length - 1); }
+    if (act === 'up') { Queue.move(index, -1); targetIndex = Math.max(0, index - 1); }
+    if (act === 'down') { Queue.move(index, 1); targetIndex = Math.min(items.length - 1, index + 1); }
+    var replacement = document.querySelector('#queue-list button[data-act="' + act + '"][data-index="' + targetIndex + '"]') || document.getElementById('btn-play-queue');
+    if (replacement) { replacement.focus(); }
   }
 
   var Queue = {
@@ -98,13 +105,15 @@
     },
     remove: function (index) {
       if (index < 0 || index >= items.length) { return; }
+      var wasCurrent = index === currentIndex;
       items.splice(index, 1);
       if (!items.length) {
         currentIndex = -1;
       } else if (index < currentIndex) {
         currentIndex -= 1;
-      } else if (index === currentIndex && currentIndex >= items.length) {
-        currentIndex = items.length - 1;
+      } else if (wasCurrent) {
+        // Kursor sebelum penerus agar tombol Berikutnya tidak melewatinya.
+        currentIndex = index - 1;
       }
       emit();
     },

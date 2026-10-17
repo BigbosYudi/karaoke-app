@@ -14,12 +14,9 @@ Gratis, tanpa server, tanpa iklan milik aplikasi.
 1. Buka terminal di folder ini.
 2. Jalankan server lokal:
    ```powershell
-   npx --yes serve -l 8080 .
+   node scripts/serve.js 8080
    ```
-   atau, bila Python terpasang:
-   ```powershell
-   python -m http.server 8080
-   ```
+   Gunakan server bawaan ini: akses `.env`, `.git`, skrip internal, dan jalur keluar folder diblokir. Jangan gunakan server generik dari akar projek yang berisi kredensial.
 3. Buka `http://localhost:8080` di komputer untuk mencoba.
 4. Untuk TV: buka `http://IP-KOMPUTER:8080` dari browser TV (keduanya harus di Wi-Fi yang sama).
 
@@ -35,7 +32,7 @@ Tanpa key, pencarian memakai server publik Invidious yang bisa berubah-ubah. Den
 4. **APIs & Services → Credentials → Create credentials → API key**.
 5. Batasi key:
    - **API restrictions** → YouTube Data API v3
-   - **Application restrictions** → Websites → tambah `http://localhost/*` dan `https://*.github.io/*`
+   - **Application restrictions** → Websites → tambah `http://localhost:8080/*` dan `https://bigbosyudi.github.io/karaoke-app/*`
 6. Ada dua cara memakai key:
    - **Cara A (di TV):** tombol **Setelan** di aplikasi → tempel key → Simpan. Key tersimpan di browser TV.
    - **Cara B (file .env):**
@@ -139,3 +136,13 @@ scripts/make-icons.ps1     Buat ulang ikon PNG
 | Video tidak bisa diputar di embed | Dibatasi pemilik video; aplikasi melewatinya otomatis, atau tekan **Buka di YouTube** |
 | Aplikasi tidak jalan di STB lama | Browser/WebView terlalu tua (butuh Chromium ± 50+ / Android 7+). Pasang TV Bro versi terbaru; cek tab Bantuan → Diagnostik perangkat |
 | Iklan masih muncul | Iklan dalam pemutar YouTube; lihat bagian 5 |
+
+
+## 10. Pemeriksaan dan keamanan lokal
+
+- Jalankan pengujian tanpa internet: `node scripts/test.js`.
+- Server lokal hanya menyajikan aset aplikasi. Server mendengarkan jaringan lokal agar TV dapat mengaksesnya; gunakan jaringan yang dipercaya dan hentikan setelah selesai.
+- `js/config.local.js` memang dibaca browser. Isinya bukan rahasia server: jangan masukkan token Git/deployment ke berkas ini. Batasi API key ke YouTube Data API dan alamat situs milik Anda, bukan seluruh `*.github.io`.
+- Menekan Hapus Key menonaktifkan key konfigurasi lokal untuk browser ini sampai key baru disimpan.
+- Mikrofon dimatikan ketika halaman ditinggalkan. Pemutaran langsung dari pencarian tidak melanjutkan antrean otomatis.
+- Pengujian otomatis memakai simulasi browser/YouTube; pemutaran, autoplay, mikrofon, dan remote tetap perlu diuji di TV fisik.
