@@ -38,36 +38,38 @@
   }
 
   function render() {
-    var list = document.getElementById('queue-list');
-    var empty = document.getElementById('queue-empty');
-    var count = document.getElementById('queue-count');
-    if (!list) { return; }
+    ['queue', 'search-queue'].forEach(function (prefix) {
+      var list = document.getElementById(prefix + '-list');
+      var empty = document.getElementById(prefix + '-empty');
+      var count = document.getElementById(prefix + '-count');
+      if (!list) { return; }
 
-    if (count) {
-      count.textContent = items.length ? '(' + items.length + ' lagu)' : '';
-    }
-    if (empty) {
-      empty.style.display = items.length ? 'none' : 'block';
-    }
+      if (count) {
+        count.textContent = items.length ? '(' + items.length + ' lagu)' : '';
+      }
+      if (empty) {
+        empty.style.display = items.length ? 'none' : 'block';
+      }
 
-    list.innerHTML = items.map(function (item, i) {
-      var cls = i === currentIndex ? 'queue-row is-current' : 'queue-row';
-      return '' +
-        '<li class="' + cls + '">' +
-          '<span class="num">' + (i + 1) + '</span>' +
-          '<div class="q-info">' +
-            '<div class="q-title">' + Utils.escapeHtml(item.title) + '</div>' +
-            '<div class="q-sub">' + Utils.escapeHtml(item.author || '') +
-              (item.duration ? ' &middot; ' + Utils.fmtTime(item.duration) : '') + '</div>' +
-          '</div>' +
-          '<div class="q-actions">' +
-            '<button class="btn" data-act="play" data-index="' + i + '">Putar</button>' +
-            '<button class="btn" data-act="up" data-index="' + i + '">Naik</button>' +
-            '<button class="btn" data-act="down" data-index="' + i + '">Turun</button>' +
-            '<button class="btn danger" data-act="remove" data-index="' + i + '">Hapus</button>' +
-          '</div>' +
-        '</li>';
-    }).join('');
+      list.innerHTML = items.map(function (item, i) {
+        var cls = i === currentIndex ? 'queue-row is-current' : 'queue-row';
+        return '' +
+          '<li class="' + cls + '">' +
+            '<span class="num">' + (i + 1) + '</span>' +
+            '<div class="q-info">' +
+              '<div class="q-title">' + Utils.escapeHtml(item.title) + '</div>' +
+              '<div class="q-sub">' + Utils.escapeHtml(item.author || '') +
+                (item.duration ? ' &middot; ' + Utils.fmtTime(item.duration) : '') + '</div>' +
+            '</div>' +
+            '<div class="q-actions">' +
+              '<button class="btn" data-act="play" data-index="' + i + '">Putar</button>' +
+              '<button class="btn" data-act="up" data-index="' + i + '">Naik</button>' +
+              '<button class="btn" data-act="down" data-index="' + i + '">Turun</button>' +
+              '<button class="btn danger" data-act="remove" data-index="' + i + '">Hapus</button>' +
+            '</div>' +
+          '</li>';
+      }).join('');
+    });
   }
 
   function handleClick(event) {
@@ -84,7 +86,8 @@
     if (act === 'remove') { Queue.remove(index); targetIndex = Math.min(index, items.length - 1); }
     if (act === 'up') { Queue.move(index, -1); targetIndex = Math.max(0, index - 1); }
     if (act === 'down') { Queue.move(index, 1); targetIndex = Math.min(items.length - 1, index + 1); }
-    var replacement = document.querySelector('#queue-list button[data-act="' + act + '"][data-index="' + targetIndex + '"]') || document.getElementById('btn-play-queue');
+    var listId = event.currentTarget.id;
+    var replacement = document.querySelector('#' + listId + ' button[data-act="' + act + '"][data-index="' + targetIndex + '"]') || document.getElementById(listId === 'search-queue-list' ? 'btn-play-search-queue' : 'btn-play-queue');
     if (replacement) { replacement.focus(); }
   }
 
@@ -148,8 +151,10 @@
     render: render,
     init: function () {
       load();
-      var list = document.getElementById('queue-list');
-      if (list) { list.addEventListener('click', handleClick); }
+      ['queue-list', 'search-queue-list'].forEach(function (id) {
+        var list = document.getElementById(id);
+        if (list) { list.addEventListener('click', handleClick); }
+      });
       render();
       emit();
     }

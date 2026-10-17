@@ -336,6 +336,12 @@
 
     var startQueue = $('btn-play-queue');
     if (startQueue) { startQueue.addEventListener('click', playFromStart); }
+    var startSearchQueue = $('btn-play-search-queue');
+    if (startSearchQueue) { startSearchQueue.addEventListener('click', playFromStart); }
+    var manageSearchQueue = $('btn-manage-search-queue');
+    if (manageSearchQueue) {
+      manageSearchQueue.addEventListener('click', function () { showView('queue'); });
+    }
 
     var youtube = $('btn-open-youtube');
     if (youtube) { youtube.addEventListener('click', openInYouTube); }

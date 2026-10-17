@@ -11,7 +11,7 @@
 <link rel="apple-touch-icon" sizes="180x180" href="icons/apple-touch-icon.png">
 <meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="theme-color" content="#0b0b12">
-<link rel="stylesheet" href="css/style.css?v=20261017-2">
+<link rel="stylesheet" href="css/style.css?v=20261017-3">
 </head>
 <body>
 <div id="app">
@@ -44,7 +44,20 @@
         <button class="btn primary" type="submit">Cari</button>
       </form>
       <p class="status" id="search-status" role="status">Ketik kata kunci lalu tekan Cari.</p>
-      <ul class="cards" id="search-results"></ul>
+      <div class="search-layout">
+        <div class="search-results-col">
+          <ul class="cards" id="search-results"></ul>
+        </div>
+        <aside class="search-queue-panel" aria-labelledby="search-queue-heading">
+          <div class="search-queue-header">
+            <h2 id="search-queue-heading">Antrean Lagu <span class="muted" id="search-queue-count" aria-live="polite"></span></h2>
+            <button class="btn primary" id="btn-play-search-queue" type="button">Putar Antrean</button>
+          </div>
+          <p class="empty" id="search-queue-empty">Belum ada lagu. Tekan <b>Tambah</b> pada hasil pencarian di sebelah kiri.</p>
+          <ul class="queue" id="search-queue-list" aria-label="Antrean dari pencarian"></ul>
+          <button class="btn ghost" id="btn-manage-search-queue" type="button">Kelola Antrean</button>
+        </aside>
+      </div>
     </section>
 
     <section class="view" id="view-queue" role="tabpanel" aria-label="Antrean lagu">
@@ -191,12 +204,12 @@
 <div class="toast" id="toast" role="status" hidden></div>
 
 <script src="js/config.local.js" onerror="void 0"></script>
-<script src="js/config.js?v=20261017-2"></script>
-<script src="js/queue.js?v=20261017-2"></script>
-<script src="js/search.js?v=20261017-2"></script>
-<script src="js/player.js?v=20261017-2"></script>
-<script src="js/mic.js?v=20261017-2"></script>
-<script src="js/guide.js?v=20261017-2"></script>
-<script src="js/app.js?v=20261017-2"></script>
+<script src="js/config.js?v=20261017-3"></script>
+<script src="js/queue.js?v=20261017-3"></script>
+<script src="js/search.js?v=20261017-3"></script>
+<script src="js/player.js?v=20261017-3"></script>
+<script src="js/mic.js?v=20261017-3"></script>
+<script src="js/guide.js?v=20261017-3"></script>
+<script src="js/app.js?v=20261017-3"></script>
 </body>
 </html>

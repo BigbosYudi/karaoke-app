@@ -1,17 +1,17 @@
 var CACHE_PREFIX = 'karaoke-tv-' + encodeURIComponent(self.registration.scope) + '-';
-var CACHE_NAME = CACHE_PREFIX + 'v10';
+var CACHE_NAME = CACHE_PREFIX + 'v11';
 var ASSETS = [
   './',
   './index.html',
   './manifest.webmanifest',
-  './css/style.css?v=20261017-2',
-  './js/config.js?v=20261017-2',
-  './js/queue.js?v=20261017-2',
-  './js/search.js?v=20261017-2',
-  './js/player.js?v=20261017-2',
-  './js/mic.js?v=20261017-2',
-  './js/guide.js?v=20261017-2',
-  './js/app.js?v=20261017-2',
+  './css/style.css?v=20261017-3',
+  './js/config.js?v=20261017-3',
+  './js/queue.js?v=20261017-3',
+  './js/search.js?v=20261017-3',
+  './js/player.js?v=20261017-3',
+  './js/mic.js?v=20261017-3',
+  './js/guide.js?v=20261017-3',
+  './js/app.js?v=20261017-3',
   './icons/logo-96.png',
   './icons/logo-512.png',
   './icons/icon-192.png',

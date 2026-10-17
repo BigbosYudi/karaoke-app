@@ -41,6 +41,36 @@ test('Memindah lagu menjaga identitas lagu aktif', () => {
   const q = queue(); q.add({ id: 'aaaaaaaaaaa', title: 'A' }); q.add({ id: 'bbbbbbbbbbb', title: 'B' });
   q.setCurrent(0); q.move(0, 1); assert.equal(q.current().title, 'A'); assert.equal(q.currentIndex(), 1);
 });
+test('Panel antrean pencarian sinkron dan tombolnya memakai antrean yang sama', () => {
+  const elements = {};
+  for (const prefix of ['queue', 'search-queue']) {
+    for (const suffix of ['list', 'count', 'empty']) elements[prefix + '-' + suffix] = {
+      id: prefix + '-' + suffix, style: {}, addEventListener(k, fn) { this.click = fn; }
+    };
+  }
+  const c = run('js/queue.js', { localStorage: storage(),
+    Utils: { escapeHtml: s => String(s).replace(/</g, '&lt;'), fmtTime: String },
+    document: { getElementById(id) { return elements[id] || null; }, querySelector() { return null; } }
+  });
+  c.Queue.init(); c.Queue.onChange(c.Queue.render);
+  assert.equal(elements['search-queue-empty'].style.display, 'block');
+  c.Queue.add({ id: 'aaaaaaaaaaa', title: '<Cinta Kita>' });
+  c.Queue.add({ id: 'bbbbbbbbbbb', title: 'Kangen' });
+  assert.equal(elements['search-queue-count'].textContent, '(2 lagu)');
+  assert.equal(elements['search-queue-list'].innerHTML, elements['queue-list'].innerHTML);
+  assert.match(elements['search-queue-list'].innerHTML, /&lt;Cinta Kita>/);
+  let played; c.Queue.onRequestPlay(i => { played = i; });
+  const list = elements['search-queue-list'];
+  function click(act, index) {
+    list.click({ currentTarget: list, target: { closest() { return { getAttribute(k) { return k === 'data-act' ? act : String(index); } }; } } });
+  }
+  click('play', 1); assert.equal(played, 1);
+  click('remove', 0); assert.equal(c.Queue.length(), 1);
+  assert.equal(elements['queue-count'].textContent, '(1 lagu)');
+  assert.match(elements['search-queue-list'].innerHTML, /Kangen/);
+  c.Queue.clear(); assert.equal(elements['search-queue-list'].innerHTML, '');
+  assert.equal(elements['search-queue-empty'].style.display, 'block');
+});
 test('Pemutar dapat mencoba ulang setelah kegagalan atau timeout API', () => {
   for (const timeout of [false, true]) {
     const tags = [], timers = [];
